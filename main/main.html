@@ -1,67 +1,55 @@
 <!doctype html>
 <html lang="ru">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ForceNet — Вход</title><link rel="stylesheet" href="css/reg.css"></head>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#f5f7fb"><title>ForceNet</title><link rel="stylesheet" href="css/main.css"></head>
 <body>
-<main class="card">
-  <div class="logo">F</div><h1>ForceNet</h1><p class="muted">Личный мессенджер без лишнего</p>
-  <form id="registerForm">
-    <input id="email" type="email" placeholder="Почта" autocomplete="email" required>
-    <input id="password" type="password" placeholder="Пароль (минимум 6 символов)" minlength="6" autocomplete="new-password" required>
-    <input id="password2" type="password" placeholder="Повторите пароль" minlength="6" autocomplete="new-password" required>
-    <input id="name" type="text" placeholder="Ваше имя" maxlength="40" autocomplete="name" required>
-    <button type="submit">Создать аккаунт</button>
-  </form>
-  <div class="divider"><span>или</span></div>
-  <form id="loginForm">
-    <input id="loginEmail" type="email" placeholder="Почта" autocomplete="email" required>
-    <input id="loginPassword" type="password" placeholder="Пароль" autocomplete="current-password" required>
-    <button type="submit" class="secondary">Войти</button>
-  </form>
-  <p id="status" class="status"></p>
+<div class="app">
+<aside class="sidebar">
+  <div class="sideTop"><div class="brand"><span>F</span> ForceNet</div><button id="settingsBtn" class="iconBtn" title="Настройки">⚙</button></div>
+  <button id="me" class="profileCard"></button>
+  <div class="searchRow"><input id="search" placeholder="Имя или ID" autocomplete="off"><button id="findBtn">Найти</button></div>
+  <div id="searchResult" class="searchResult"></div>
+  <div class="sectionTitle">Друзья</div><div class="chats" id="chats"></div>
+  <button id="logout" class="logout">Выйти</button>
+</aside>
+<main class="chat">
+  <header class="chatHead"><button id="backBtn" class="iconBtn mobileOnly">‹</button><div><strong id="chatTitle">Выберите чат</strong><small id="chatSub"></small></div><div class="headSpace"></div></header>
+  <div id="messages" class="messages"><div class="empty">Выберите друга, чтобы начать чат.</div></div>
+  <div id="filePreview" class="filePreview hidden"></div><div class="composer"><input id="fileInput" type="file" hidden accept="image/*,video/*,audio/*,.pdf,.txt,.zip,.doc,.docx,.xls,.xlsx"><button id="attachBtn" class="attachBtn" title="Прикрепить файл">📎</button><input id="text" placeholder="Написать сообщение…" autocomplete="off"><button id="send">Отправить</button></div>
 </main>
+</div>
+<div id="settingsModal" class="modal hidden"><div class="modalCard"><div class="modalHead"><h2>Настройки</h2><button id="closeSettings" class="iconBtn">×</button></div><label>Ваш ID</label><div class="copyRow"><input id="myId" readonly><button id="copyId">Копировать</button></div><label>Имя</label><input id="myName"><label>Тема</label><div class="themeRow"><button data-theme="light" class="themeChoice">Светлая</button><button data-theme="dark" class="themeChoice">Тёмная</button></div><button id="saveSettings" class="save">Сохранить</button><p id="settingsStatus"></p></div></div>
+<div id="confirmModal" class="modal hidden"><div class="modalCard small"><h2>Удалить сообщение?</h2><p>Сообщение будет удалено у всех участников чата.</p><div class="modalActions"><button id="cancelDelete" class="secondaryBtn">Отмена</button><button id="confirmDelete" class="danger">Удалить</button></div></div></div>
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-import {getAuth,setPersistence,browserLocalPersistence,createUserWithEmailAndPassword,signInWithEmailAndPassword,updateProfile,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
-import {getDatabase,ref,set,get,query,orderByChild,equalTo} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
+import {getAuth,setPersistence,browserLocalPersistence,onAuthStateChanged,signOut,updateProfile} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+import {getDatabase,ref,get,set,push,onValue,query,orderByChild,equalTo,update,remove} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
+import {createClient} from "https://esm.sh/@supabase/supabase-js@2";
 const firebaseConfig={apiKey:"AIzaSyCiL-Eq-xQNRR8d-bReut-gahzy2BGTWds",authDomain:"forcenet-cefc2.firebaseapp.com",databaseURL:"https://forcenet-cefc2-default-rtdb.europe-west1.firebasedatabase.app/",projectId:"forcenet-cefc2",storageBucket:"forcenet-cefc2.firebasestorage.app",messagingSenderId:"1021268753513",appId:"1:1021268753513:web:f7af3b4e0e4ff40c48f6f8"};
-const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getDatabase(app); await setPersistence(auth,browserLocalPersistence);
-const $=id=>document.getElementById(id), msg=t=>{$("status").textContent=t};
-let busy=false;
-function makeId(){return String(Math.floor(100000+Math.random()*900000))}
-async function uniqueId(){for(let i=0;i<40;i++){const id=makeId();if(!(await get(ref(db,"users/"+id))).exists())return id}throw new Error("Не удалось создать ID. Попробуйте ещё раз.")}
-async function findMyProfile(uid){const s=await get(query(ref(db,"users"),orderByChild("uid"),equalTo(uid)));let out=null;s.forEach(x=>out={...x.val(),publicId:x.key});return out}
-onAuthStateChanged(auth,async user=>{
-  if(!user || busy) return;
-  const p=await findMyProfile(user.uid);
-  if(p) location.replace("../main/main.html");
-});
-$("registerForm").onsubmit=async e=>{
- e.preventDefault(); if(busy)return; busy=true;
- const email=$("email").value.trim(), password=$("password").value, password2=$("password2").value, name=$("name").value.trim();
- if(password!==password2){busy=false;return msg("Пароли не совпадают.");} if(name.length<2){busy=false;return msg("Имя слишком короткое.")}
- try{
-   msg("Создаём аккаунт…");
-   const cred=await createUserWithEmailAndPassword(auth,email,password);
-   await updateProfile(cred.user,{displayName:name});
-   const publicId=await uniqueId();
-   await set(ref(db,"users/"+publicId),{uid:cred.user.uid,id:publicId,name,email,createdAt:Date.now(),theme:"dark"});
-   localStorage.setItem("forceNetPublicId",publicId);
-   location.replace("../main/main.html");
- }catch(err){console.error(err);msg(err.code==="auth/email-already-in-use"?"Эта почта уже зарегистрирована.":(err.message||"Ошибка регистрации."));busy=false}
-};
-$("loginForm").onsubmit=async e=>{
- e.preventDefault(); if(busy)return; busy=true;
- try{
-   msg("Входим…"); const cred=await signInWithEmailAndPassword(auth,$("loginEmail").value.trim(),$("loginPassword").value);
-   let p=await findMyProfile(cred.user.uid);
-   if(!p){
-     // Recover profiles for accounts created by older version.
-     const publicId=await uniqueId(), name=cred.user.displayName||"Пользователь";
-     await set(ref(db,"users/"+publicId),{uid:cred.user.uid,id:publicId,name,email:cred.user.email||"",createdAt:Date.now(),theme:"dark"});
-     p={publicId,name};
-   }
-   localStorage.setItem("forceNetPublicId",p.publicId); location.replace("../main/main.html");
- }catch(err){console.error(err);msg(err.code==="auth/invalid-credential"?"Неверная почта или пароль.":(err.message||"Ошибка входа."));busy=false}
-};
+const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getDatabase(app);await setPersistence(auth,browserLocalPersistence);
+const supabase=createClient("https://btssggabiwcfibijlpee.supabase.co","sb_publishable_lb3EYFwtDxk17z810Ec2Sg_of3yqAoS"); const FILE_BUCKET="chat-files";
+const $=id=>document.getElementById(id); const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+let myPublicId="",me=null,currentOther=null,currentChat="",unsub=null,profile=null,pendingDelete=null;
+const WEEK=7*24*60*60*1000;
+const chatId=(a,b)=>[a,b].sort().join("_");
+async function getMyUser(uid){const s=await get(query(ref(db,"users"),orderByChild("uid"),equalTo(uid)));let u=null;s.forEach(x=>u={...x.val(),publicId:x.key});return u}
+async function loadProfile(user){for(let i=0;i<10;i++){const u=await getMyUser(user.uid);if(u)return u;await new Promise(r=>setTimeout(r,300));}return null}
+function applyTheme(t){document.body.dataset.theme=t||"dark";localStorage.setItem("forceNetTheme",t||"dark")}
+function renderMe(){ $("me").innerHTML=`<span class="avatar">${esc((profile.name||"U")[0].toUpperCase())}</span><span><b>${esc(profile.name)}</b><small>ID ${myPublicId}</small></span>` }
+async function saveFriend(id,u){await set(ref(db,`friends/${myPublicId}/${id}`),{id,name:u.name||id,addedAt:Date.now()});renderFriends()}
+async function removeFriend(id){await remove(ref(db,`friends/${myPublicId}/${id}`));renderFriends()}
+function renderFriends(){onValue(ref(db,`friends/${myPublicId}`),snap=>{const box=$("chats");box.innerHTML="";if(!snap.exists()){box.innerHTML='<div class="emptySide">Пока нет друзей.<br>Найдите человека выше.</div>';return}snap.forEach(x=>{const u=x.val(),b=document.createElement("button");b.className="friend "+(currentOther?.publicId===x.key?"active":"");b.innerHTML=`<span class="avatar">${esc((u.name||"U")[0].toUpperCase())}</span><span><b>${esc(u.name)}</b><small>ID ${x.key}</small></span>`;b.onclick=()=>openChat(x.key,u);box.appendChild(b)})})}
+async function findUser(){const q=$("search").value.trim();$("searchResult").innerHTML="";if(!q)return;if(q===myPublicId)return $("searchResult").textContent="Это ваш ID.";let results=[];if(/^\d{6}$/.test(q)){const s=await get(ref(db,"users/"+q));if(s.exists())results=[[q,s.val()]]}else{const s=await get(ref(db,"users"));s.forEach(x=>{if(x.key!==myPublicId&&String(x.val().name||"").toLowerCase().includes(q.toLowerCase()))results.push([x.key,x.val()])})}
+if(!results.length)return $("searchResult").textContent="Пользователь не найден.";results.slice(0,15).forEach(([id,u])=>{const d=document.createElement("div");d.className="result";d.innerHTML=`<span class="avatar">${esc((u.name||"U")[0].toUpperCase())}</span><span class="resultInfo"><b>${esc(u.name)}</b><small>ID ${id}</small></span><button>＋ Друг</button>`;d.querySelector("button").onclick=async()=>{await saveFriend(id,u);openChat(id,u)};$("searchResult").appendChild(d)})}
+function openChat(id,u){currentOther={...u,publicId:id};currentChat=chatId(myPublicId,id);$("chatTitle").textContent=u.name;$("chatSub").textContent="ID "+id;$("messages").innerHTML='<div class="empty">Загрузка…</div>';document.body.classList.add("chatOpen");if(unsub)unsub();unsub=onValue(ref(db,"messages/"+currentChat),snap=>{const arr=[];snap.forEach(x=>{const m={id:x.key,...x.val()};if(m.createdAt&&Date.now()-m.createdAt>WEEK)remove(ref(db,`messages/${currentChat}/${m.id}`));else arr.push(m)});arr.sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));$("messages").innerHTML=arr.length?"":'<div class="empty">Пока нет сообщений.</div>';arr.forEach(renderMessage);$("messages").scrollTop=$("messages").scrollHeight})}
+function renderMessage(m){const el=document.createElement("div");el.className="message "+(m.senderId===myPublicId?"mine":"theirs");el.dataset.id=m.id;let body=m.text?`<div class="bubbleText">${esc(m.text)}</div>`:"";if(m.fileUrl){const t=m.fileType||"";if(t.startsWith("image/"))body+=`<a href="${esc(m.fileUrl)}" target="_blank" rel="noopener"><img class="chatImage" src="${esc(m.fileUrl)}" alt="${esc(m.fileName||"Фото")}" loading="lazy"></a>`;else if(t.startsWith("video/"))body+=`<video class="chatVideo" controls preload="metadata" src="${esc(m.fileUrl)}"></video>`;else if(t.startsWith("audio/"))body+=`<audio class="chatAudio" controls src="${esc(m.fileUrl)}"></audio>`;else body+=`<a class="fileCard" href="${esc(m.fileUrl)}" target="_blank" rel="noopener">📎 ${esc(m.fileName||"Файл")}</a>`;}el.innerHTML=`${body}<div class="msgMeta"><span>${new Date(m.createdAt||0).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}${m.edited?" · изменено":""}</span>${m.senderId===myPublicId?`<button class="msgMore">•••</button>`:""}</div>`;if(m.senderId===myPublicId)el.querySelector(".msgMore").onclick=()=>showMsgMenu(m);$("messages").appendChild(el)}
+function showMsgMenu(m){const action=prompt("Введите: 1 — изменить, 2 — удалить");if(action==="1")editMessage(m);if(action==="2"){pendingDelete=m;$("confirmModal").classList.remove("hidden")}}
+async function editMessage(m){if(m.fileUrl)return alert("Файловое сообщение нельзя редактировать — отправьте новый файл.");const text=prompt("Изменить сообщение:",m.text);if(text===null||!text.trim()||text.trim()===m.text)return;await update(ref(db,`messages/${currentChat}/${m.id}`),{text:text.trim(),edited:true,editedAt:Date.now()})}
+$("confirmDelete").onclick=async()=>{if(pendingDelete){if(pendingDelete.filePath){try{await supabase.storage.from(FILE_BUCKET).remove([pendingDelete.filePath])}catch(e){console.warn(e)}}await remove(ref(db,`messages/${currentChat}/${pendingDelete.id}`));}pendingDelete=null;$("confirmModal").classList.add("hidden")};$("cancelDelete").onclick=()=>{$("confirmModal").classList.add("hidden");pendingDelete=null};
+async function uploadFile(file,messageId){const safe=file.name.replace(/[^a-zA-Z0-9._-]/g,"_");const path=`${myPublicId}/${currentChat}/${messageId}-${Date.now()}-${safe}`;const {error}=await supabase.storage.from(FILE_BUCKET).upload(path,file,{contentType:file.type||"application/octet-stream",upsert:false});if(error)throw error;return {url:supabase.storage.from(FILE_BUCKET).getPublicUrl(path).data.publicUrl,path};}
+async function send(){if(!currentOther)return alert("Сначала выберите друга.");const text=$("text").value.trim(),file=$("fileInput").files[0];if(!text&&!file)return;const msgRef=push(ref(db,"messages/"+currentChat));try{const data={senderId:myPublicId,text,createdAt:Date.now(),expiresAt:Date.now()+WEEK};if(file){if(file.size>100*1024*1024)throw new Error("Файл больше 100 МБ");const u=await uploadFile(file,msgRef.key);Object.assign(data,{fileUrl:u.url,filePath:u.path,fileName:file.name,fileType:file.type,fileSize:file.size});}await set(msgRef,data);$("text").value="";$("fileInput").value="";$("filePreview").classList.add("hidden");$("filePreview").textContent="";}catch(e){console.error(e);alert("Не удалось загрузить файл. Проверьте bucket chat-files и Storage policies в Supabase.")}}
+$("attachBtn").onclick=()=>{if(!currentOther)return alert("Сначала выберите друга.");$("fileInput").click()};$("fileInput").onchange=e=>{const f=e.target.files[0];const b=$("filePreview");if(!f){b.classList.add("hidden");return}b.classList.remove("hidden");b.textContent=`Прикреплено: ${f.name}`};$("send").onclick=send;$("text").onkeydown=e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send()}};$("findBtn").onclick=findUser;$("search").onkeydown=e=>{if(e.key==="Enter")findUser()};$("logout").onclick=()=>signOut(auth);
+$("settingsBtn").onclick=()=>{$("myId").value=myPublicId;$("myName").value=profile.name||"";$("settingsModal").classList.remove("hidden")};$("closeSettings").onclick=()=>$("settingsModal").classList.add("hidden");$("copyId").onclick=async()=>{await navigator.clipboard.writeText(myPublicId);$("settingsStatus").textContent="ID скопирован"};$("saveSettings").onclick=async()=>{const name=$("myName").value.trim();if(name.length<2)return $("settingsStatus").textContent="Имя должно быть от 2 символов.";const theme=document.querySelector(".themeChoice.selected")?.dataset.theme||document.body.dataset.theme;await update(ref(db,"users/"+myPublicId),{name,theme});await updateProfile(me,{displayName:name});profile.name=name;applyTheme(theme);renderMe();$("settingsStatus").textContent="Сохранено"};document.querySelectorAll(".themeChoice").forEach(b=>b.onclick=()=>{document.querySelectorAll(".themeChoice").forEach(x=>x.classList.remove("selected"));b.classList.add("selected");applyTheme(b.dataset.theme)});
+$("backBtn").onclick=()=>document.body.classList.remove("chatOpen");
+onAuthStateChanged(auth,async user=>{if(!user)return location.replace("../registration/registration.html");me=user;profile=await loadProfile(user);if(!profile){alert("Профиль не найден. Перезайдите — профиль будет восстановлен автоматически.");return signOut(auth)}myPublicId=profile.publicId;localStorage.setItem("forceNetPublicId",myPublicId);applyTheme(profile.theme||localStorage.getItem("forceNetTheme")||"dark");renderMe();renderFriends()});
 </script>
 </body></html>
