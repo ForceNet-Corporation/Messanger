@@ -9,6 +9,7 @@
     <input id="password" type="password" placeholder="Пароль (минимум 6 символов)" minlength="6" autocomplete="new-password" required>
     <input id="password2" type="password" placeholder="Повторите пароль" minlength="6" autocomplete="new-password" required>
     <input id="name" type="text" placeholder="Ваше имя" maxlength="40" autocomplete="name" required>
+    <input id="username" type="text" placeholder="Юзернейм (латиница, цифры, _)" maxlength="20" autocomplete="off" required>
     <button type="submit">Создать аккаунт</button>
   </form>
   <div class="divider"><span>или</span></div>
@@ -22,42 +23,73 @@
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 import {getAuth,setPersistence,browserLocalPersistence,createUserWithEmailAndPassword,signInWithEmailAndPassword,updateProfile,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
-import {getDatabase,ref,set,get,query,orderByChild,equalTo} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
+import {getDatabase,ref,set,get,remove,query,orderByChild,equalTo,runTransaction} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
 const firebaseConfig={apiKey:"AIzaSyCiL-Eq-xQNRR8d-bReut-gahzy2BGTWds",authDomain:"forcenet-cefc2.firebaseapp.com",databaseURL:"https://forcenet-cefc2-default-rtdb.europe-west1.firebasedatabase.app/",projectId:"forcenet-cefc2",storageBucket:"forcenet-cefc2.firebasestorage.app",messagingSenderId:"1021268753513",appId:"1:1021268753513:web:f7af3b4e0e4ff40c48f6f8"};
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getDatabase(app); await setPersistence(auth,browserLocalPersistence);
 const $=id=>document.getElementById(id), msg=t=>{$("status").textContent=t};
 let busy=false;
+
 function makeId(){return String(Math.floor(100000+Math.random()*900000))}
 async function uniqueId(){for(let i=0;i<40;i++){const id=makeId();if(!(await get(ref(db,"users/"+id))).exists())return id}throw new Error("Не удалось создать ID. Попробуйте ещё раз.")}
-async function findMyProfile(uid){const s=await get(query(ref(db,"users"),orderByChild("uid"),equalTo(uid)));let out=null;s.forEach(x=>out={...x.val(),publicId:x.key});return out}
+function normalizeUsername(u){return u.trim().toLowerCase()}
+function validUsername(u){return /^[a-z0-9_]{3,20}$/.test(u)}
+// Занимаем юзернейм атомарно: transaction ставит значение, только если слот ещё пуст —
+// это защищает от одновременной регистрации двух людей с одинаковым юзернеймом.
+async function claimUsername(lower,value){
+  const r=await runTransaction(ref(db,"usernames/"+lower),cur=>cur===null?value:undefined);
+  return r.committed && r.snapshot.val()===value;
+}
+async function findMyProfile(uid){
+  const s=await get(query(ref(db,"users"),orderByChild("uid"),equalTo(uid)));
+  let out=null; s.forEach(x=>{out={...x.val(),publicId:x.key};});
+  return out;
+}
+
 onAuthStateChanged(auth,async user=>{
   if(!user || busy) return;
   const p=await findMyProfile(user.uid);
   if(p) location.replace("../main/main.html");
 });
+
 $("registerForm").onsubmit=async e=>{
  e.preventDefault(); if(busy)return; busy=true;
  const email=$("email").value.trim(), password=$("password").value, password2=$("password2").value, name=$("name").value.trim();
- if(password!==password2){busy=false;return msg("Пароли не совпадают.");} if(name.length<2){busy=false;return msg("Имя слишком короткое.")}
+ const usernameLower=normalizeUsername($("username").value);
+ if(password!==password2){busy=false;return msg("Пароли не совпадают.");}
+ if(name.length<2){busy=false;return msg("Имя слишком короткое.")}
+ if(!validUsername(usernameLower)){busy=false;return msg("Юзернейм: 3–20 символов, латинские буквы, цифры и _.")}
  try{
-   msg("Создаём аккаунт…");
-   const cred=await createUserWithEmailAndPassword(auth,email,password);
-   await updateProfile(cred.user,{displayName:name});
-   const publicId=await uniqueId();
-   await set(ref(db,"users/"+publicId),{uid:cred.user.uid,id:publicId,name,email,createdAt:Date.now(),theme:"dark"});
-   localStorage.setItem("forceNetPublicId",publicId);
-   location.replace("../main/main.html");
+   msg("Проверяем юзернейм…");
+   // Резервируем юзернейм временной меткой ДО создания аккаунта, чтобы не было гонки.
+   const reserved=await claimUsername(usernameLower,"pending_"+Date.now());
+   if(!reserved){busy=false;return msg("Этот юзернейм уже занят.")}
+   try{
+     msg("Создаём аккаунт…");
+     const cred=await createUserWithEmailAndPassword(auth,email,password);
+     await updateProfile(cred.user,{displayName:name});
+     const publicId=await uniqueId();
+     await set(ref(db,"usernames/"+usernameLower),publicId);
+     await set(ref(db,"users/"+publicId),{uid:cred.user.uid,id:publicId,name,username:usernameLower,email,createdAt:Date.now(),theme:"dark"});
+     localStorage.setItem("forceNetPublicId",publicId);
+     location.replace("../main/main.html");
+   }catch(innerErr){
+     await remove(ref(db,"usernames/"+usernameLower)).catch(()=>{});
+     throw innerErr;
+   }
  }catch(err){console.error(err);msg(err.code==="auth/email-already-in-use"?"Эта почта уже зарегистрирована.":(err.message||"Ошибка регистрации."));busy=false}
 };
+
 $("loginForm").onsubmit=async e=>{
  e.preventDefault(); if(busy)return; busy=true;
  try{
    msg("Входим…"); const cred=await signInWithEmailAndPassword(auth,$("loginEmail").value.trim(),$("loginPassword").value);
    let p=await findMyProfile(cred.user.uid);
    if(!p){
-     // Recover profiles for accounts created by older version.
+     // Восстановление профиля для аккаунтов, созданных старой версией без юзернейма.
      const publicId=await uniqueId(), name=cred.user.displayName||"Пользователь";
-     await set(ref(db,"users/"+publicId),{uid:cred.user.uid,id:publicId,name,email:cred.user.email||"",createdAt:Date.now(),theme:"dark"});
+     const fallbackUsername=("user"+publicId);
+     await set(ref(db,"usernames/"+fallbackUsername),publicId).catch(()=>{});
+     await set(ref(db,"users/"+publicId),{uid:cred.user.uid,id:publicId,name,username:fallbackUsername,email:cred.user.email||"",createdAt:Date.now(),theme:"dark"});
      p={publicId,name};
    }
    localStorage.setItem("forceNetPublicId",p.publicId); location.replace("../main/main.html");
