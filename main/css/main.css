@@ -30,3 +30,6 @@
 @media(max-width:360px){
   .brand{font-size:17px}.searchRow{gap:5px}.searchRow button{font-size:13px}.composer button:last-child{font-size:12px;padding:0 8px}.messages{padding:10px}.message{max-width:94%}
 }
+
+/* Message list stability fix */
+.app{height:100dvh;min-height:0}.chat{height:100%;min-height:0}.messages{min-height:0;align-items:stretch}.message{position:relative;flex:0 0 auto;align-self:flex-start}.message.mine{align-self:flex-end}.message>*{position:relative}
