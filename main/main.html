@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>ForceNet Messenger</title>
+  <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">ForceNet</div>
+    <div class="me" id="me"></div>
+    <div class="searchRow">
+      <input id="search" placeholder="ID пользователя (6 цифр)">
+      <button id="findBtn">Найти</button>
+    </div>
+    <div id="searchResult"></div>
+    <div class="chats" id="chats"></div>
+    <button id="logout" class="logout">Выйти</button>
+  </aside>
+
+  <main class="chat">
+    <header class="chatHead">
+      <div>
+        <strong id="chatTitle">Выберите чат</strong>
+        <small id="chatSub"></small>
+      </div>
+    </header>
+    <div id="messages" class="messages">
+      <div class="empty">Выберите пользователя слева, чтобы начать чат.</div>
+    </div>
+    <div class="composer">
+      <input id="file" type="file" hidden>
+      <button id="fileBtn" title="Файл">＋</button>
+      <input id="text" placeholder="Сообщение..." autocomplete="off">
+      <button id="send">Отправить</button>
+    </div>
+    <div id="uploadStatus" class="uploadStatus"></div>
+  </main>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+import { getDatabase, ref, get, set, push, onValue, query, orderByChild, equalTo, remove, update } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCiL-Eq-xQNRR8d-bReut-gahzy2BGTWds",
+  authDomain: "forcenet-cefc2.firebaseapp.com",
+  projectId: "forcenet-cefc2",
+  storageBucket: "forcenet-cefc2.firebasestorage.app",
+  messagingSenderId: "1021268753513",
+  appId: "1:1021268753513:web:f7af3b4e0e4ff40c48f6f8"
+};
+
+const SUPABASE_URL = "https://YOUR_PROJECT.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "PASTE_YOUR_SUPABASE_PUBLISHABLE_KEY_HERE";
+
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getDatabase(app);
+const supabase=createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
+
+const $=id=>document.getElementById(id);
+let me=null, myPublicId="", currentChat="", currentOther=null, messagesUnsub=null;
+const DAILY_LIMIT=450*1024*1024;
+const WEEK=7*24*60*60*1000;
+
+function chatId(a,b){ return [a,b].sort().join("_"); }
+function escapeHtml(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));}
+function setStatus(t){$("uploadStatus").textContent=t||"";}
+
+async function getMyUser(uid){
+  const q=query(ref(db,"users"),orderByChild("uid"),equalTo(uid));
+  const snap=await get(q);
+  let u=null; snap.forEach(x=>u={...x.val(),publicId:x.key});
+  return u;
+}
+async function cleanupOldMessages(chat){
+  const snap=await get(ref(db,"messages/"+chat));
+  if(!snap.exists()) return;
+  const updates={};
+  snap.forEach(x=>{
+    const m=x.val();
+    if(m.createdAt && Date.now()-m.createdAt>WEEK) updates[x.key]=null;
+  });
+  if(Object.keys(updates).length) await update(ref(db,"messages/"+chat),updates);
+}
+async function cleanupMyOldQuota(){
+  const start=Date.now()-24*60*60*1000;
+  const snap=await get(ref(db,"usage/"+myPublicId));
+  if(!snap.exists()) return 0;
+  let total=0, updates={};
+  snap.forEach(x=>{
+    const v=x.val();
+    if(v.createdAt>=start) total+=Number(v.bytes||0);
+    else updates[x.key]=null;
+  });
+  if(Object.keys(updates).length) await update(ref(db,"usage/"+myPublicId),updates);
+  return total;
+}
+async function addUsage(bytes){
+  const total=await cleanupMyOldQuota();
+  if(total+bytes>DAILY_LIMIT) throw new Error("Дневной лимит 450 МБ уже исчерпан.");
+  await set(push(ref(db,"usage/"+myPublicId)),{bytes,createdAt:Date.now()});
+}
+
+async function findUser(){
+  const id=$("search").value.trim();
+  $("searchResult").innerHTML="";
+  if(!/^\d{6}$/.test(id)) return $("searchResult").textContent="Введите ID из 6 цифр.";
+  const snap=await get(ref(db,"users/"+id));
+  if(!snap.exists()) return $("searchResult").textContent="Пользователь не найден.";
+  if(id===myPublicId) return $("searchResult").textContent="Это ваш ID.";
+  const u=snap.val();
+  const div=document.createElement("div");
+  div.className="result";
+  div.innerHTML=`<span><b>${escapeHtml(u.name)}</b><small>ID: ${id}</small></span><button>Открыть</button>`;
+  div.querySelector("button").onclick=()=>openChat(id,u);
+  $("searchResult").appendChild(div);
+}
+
+function openChat(otherId,u){
+  currentOther={...u,publicId:otherId};
+  currentChat=chatId(myPublicId,otherId);
+  $("chatTitle").textContent=u.name||otherId;
+  $("chatSub").textContent="ID: "+otherId;
+  $("messages").innerHTML="";
+  if(messagesUnsub) messagesUnsub();
+  messagesUnsub=onValue(ref(db,"messages/"+currentChat),snap=>{
+    const arr=[];
+    snap.forEach(x=>arr.push({id:x.key,...x.val()}));
+    arr.sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
+    $("messages").innerHTML="";
+    if(!arr.length) $("messages").innerHTML='<div class="empty">Пока нет сообщений.</div>';
+    for(const m of arr){
+      const el=document.createElement("div");
+      el.className="message "+(m.senderId===myPublicId?"mine":"theirs");
+      let body="";
+      if(m.type==="text") body=`<div>${escapeHtml(m.text)}</div>`;
+      else if(m.type==="image") body=`<img src="${escapeHtml(m.url)}" alt="">`;
+      else if(m.type==="video") body=`<video src="${escapeHtml(m.url)}" controls></video>`;
+      else body=`<a href="${escapeHtml(m.url)}" target="_blank" rel="noopener">${escapeHtml(m.fileName||"Файл")}</a>`;
+      el.innerHTML=body+`<small>${new Date(m.createdAt||0).toLocaleString()}</small>`;
+      $("messages").appendChild(el);
+      if(m.createdAt && Date.now()-m.createdAt>WEEK) remove(ref(db,"messages/"+currentChat+"/"+m.id)).catch(()=>{});
+    }
+    $("messages").scrollTop=$("messages").scrollHeight;
+  });
+}
+
+async function sendText(){
+  if(!currentOther) return alert("Сначала выберите чат.");
+  const text=$("text").value.trim();
+  if(!text) return;
+  const id=push(ref(db,"messages/"+currentChat)).key;
+  await set(ref(db,"messages/"+currentChat+"/"+id),{
+    senderId:myPublicId,type:"text",text,createdAt:Date.now(),expiresAt:Date.now()+WEEK
+  });
+  $("text").value="";
+}
+
+async function sendFile(file){
+  if(!currentOther) return alert("Сначала выберите чат.");
+  if(!file) return;
+  if(file.size>50*1024*1024) return alert("В этой версии максимальный размер одного файла — 50 МБ.");
+  try{
+    setStatus("Проверяем дневной лимит...");
+    await addUsage(file.size);
+    const ext=(file.name.split(".").pop()||"bin").replace(/[^a-zA-Z0-9]/g,"");
+    const kind=file.type.startsWith("image/")?"images":file.type.startsWith("video/")?"videos":"files";
+    const path=`${myPublicId}/${crypto.randomUUID()}${ext?"."+ext:""}`;
+    setStatus("Загружаем...");
+    const {data,error}=await supabase.storage.from("messenger-files").upload(path,file,{contentType:file.type||"application/octet-stream",upsert:false});
+    if(error) throw error;
+    const {data:pub}=supabase.storage.from("messenger-files").getPublicUrl(data.path);
+    const type=file.type.startsWith("image/")?"image":file.type.startsWith("video/")?"video":"file";
+    await set(push(ref(db,"messages/"+currentChat)),{
+      senderId:myPublicId,type,filePath:data.path,url:pub.publicUrl,fileName:file.name,fileSize:file.size,createdAt:Date.now(),expiresAt:Date.now()+WEEK
+    });
+    setStatus("Файл отправлен.");
+    setTimeout(()=>setStatus(""),2000);
+  }catch(e){
+    console.error(e);
+    setStatus(e.message||"Ошибка загрузки.");
+  }
+}
+
+$("findBtn").onclick=findUser;
+$("search").addEventListener("keydown",e=>{if(e.key==="Enter")findUser()});
+$("send").onclick=sendText;
+$("text").addEventListener("keydown",e=>{if(e.key==="Enter")sendText()});
+$("fileBtn").onclick=()=>$("file").click();
+$("file").onchange=e=>{const f=e.target.files[0]; if(f)sendFile(f); e.target.value=""};
+$("logout").onclick=()=>signOut(auth).then(()=>location.replace("../registration/registration.html"));
+
+onAuthStateChanged(auth,async user=>{
+  if(!user) return location.replace("../registration/registration.html");
+  me=user; 
+  const u=await getMyUser(user.uid);
+  if(!u) return alert("Профиль не найден.");
+  myPublicId=u.publicId;
+  $("me").innerHTML=`<b>${escapeHtml(u.name)}</b><small>ID: ${myPublicId}</small>`;
+});
+</script>
+</body>
+</html>
