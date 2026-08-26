@@ -117,7 +117,7 @@ document.getElementById("loginForm").addEventListener("submit", async e => {
     const q=query(ref(db,"users"),orderByChild("uid"),equalTo(cred.user.uid));
     const snap=await get(q);
     let publicId="";
-    snap.forEach(x=>publicId=x.key);
+    snap.forEach(x=>{publicId=x.key;});
     if(publicId) localStorage.setItem("forceNetPublicId",publicId);
     location.replace("../main/main.html");
   } catch(err) {
