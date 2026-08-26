@@ -33,3 +33,19 @@
 
 /* Message list stability fix */
 .app{height:100dvh;min-height:0}.chat{height:100%;min-height:0}.messages{min-height:0;align-items:stretch}.message{position:relative;flex:0 0 auto;align-self:flex-start}.message.mine{align-self:flex-end}.message>*{position:relative}
+
+/* Юзернеймы, друзья, группы, редактирование сообщений — доп. стили */
+img.avatar{object-fit:cover;background:#e7ebff}
+body[data-theme=dark] .avatar{background:#1c2440;color:#a7b3ff}
+.sectionTitle{display:flex;align-items:center;justify-content:space-between}
+.sectionTitle .iconBtn{font-size:16px;padding:3px 7px}
+.chats{flex:none;overflow:visible}
+.sidebar{overflow-y:auto}
+.friendRename{margin-left:auto;border:0;background:transparent;color:inherit;opacity:.45;padding:5px;border-radius:8px;flex:none;font-size:13px}
+.friend:hover .friendRename{opacity:.85}
+.friendRename:hover{opacity:1;background:#00000014}
+.groupAvatar{font-weight:800}
+.senderName{font-size:11px;font-weight:700;color:#5b6cff;margin-bottom:3px}
+.message.mine .senderName{display:none}
+.editArea{width:100%;min-height:60px;border-radius:10px;border:1px solid #ffffff55;background:#ffffff15;color:inherit;padding:8px;font:inherit;resize:vertical;outline:0}
+.message.theirs .editArea{border-color:#00000022;background:#00000008;color:inherit}
