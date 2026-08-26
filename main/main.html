@@ -12,7 +12,7 @@
     <div class="brand">ForceNet</div>
     <div class="me" id="me"></div>
     <div class="searchRow">
-      <input id="search" placeholder="ID пользователя (6 цифр)">
+      <input id="search" placeholder="Имя или ID (6 цифр)">
       <button id="findBtn">Найти</button>
     </div>
     <div id="searchResult"></div>
@@ -42,7 +42,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+import { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence, signOut } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 import { getDatabase, ref, get, set, push, onValue, query, orderByChild, equalTo, remove, update } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -63,6 +63,7 @@ const app=initializeApp(firebaseConfig);
 const auth=getAuth(app);
 const db=getDatabase(app);
 const supabase=createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
+await setPersistence(auth,browserLocalPersistence);
 
 const $=id=>document.getElementById(id);
 let me=null, myPublicId="", currentChat="", currentOther=null, messagesUnsub=null;
@@ -108,14 +109,7 @@ async function addUsage(bytes){
   await set(push(ref(db,"usage/"+myPublicId)),{bytes,createdAt:Date.now()});
 }
 
-async function findUser(){
-  const id=$("search").value.trim();
-  $("searchResult").innerHTML="";
-  if(!/^\d{6}$/.test(id)) return $("searchResult").textContent="Введите ID из 6 цифр.";
-  const snap=await get(ref(db,"users/"+id));
-  if(!snap.exists()) return $("searchResult").textContent="Пользователь не найден.";
-  if(id===myPublicId) return $("searchResult").textContent="Это ваш ID.";
-  const u=snap.val();
+function renderResult(id,u){
   const div=document.createElement("div");
   div.className="result";
   div.innerHTML=`<span><b>${escapeHtml(u.name)}</b><small>ID: ${id}</small></span><button>Открыть</button>`;
@@ -123,7 +117,37 @@ async function findUser(){
   $("searchResult").appendChild(div);
 }
 
+async function findUser(){
+  const q=$("search").value.trim();
+  $("searchResult").innerHTML="";
+  if(!q) return;
+
+  if(/^\d{6}$/.test(q)){
+    // Точный поиск по ID
+    if(q===myPublicId) return $("searchResult").textContent="Это ваш ID.";
+    const snap=await get(ref(db,"users/"+q));
+    if(!snap.exists()) return $("searchResult").textContent="Пользователь не найден.";
+    return renderResult(q,snap.val());
+  }
+
+  // Поиск по имени (без учёта регистра, по вхождению подстроки)
+  const snap=await get(ref(db,"users"));
+  if(!snap.exists()) return $("searchResult").textContent="Пользователь не найден.";
+  const needle=q.toLowerCase();
+  let found=0;
+  snap.forEach(x=>{
+    const u=x.val();
+    if(x.key===myPublicId) return;
+    if(String(u.name||"").toLowerCase().includes(needle)){
+      renderResult(x.key,u);
+      found++;
+    }
+  });
+  if(!found) $("searchResult").textContent="Пользователь не найден.";
+}
+
 function openChat(otherId,u){
+  if(!myPublicId) return alert("Профиль ещё загружается, подождите секунду и попробуйте снова.");
   currentOther={...u,publicId:otherId};
   currentChat=chatId(myPublicId,otherId);
   $("chatTitle").textContent=u.name||otherId;
@@ -152,15 +176,27 @@ function openChat(otherId,u){
   });
 }
 
+let sending=false;
 async function sendText(){
   if(!currentOther) return alert("Сначала выберите чат.");
+  if(!myPublicId) return alert("Профиль ещё загружается, подождите секунду.");
   const text=$("text").value.trim();
-  if(!text) return;
-  const id=push(ref(db,"messages/"+currentChat)).key;
-  await set(ref(db,"messages/"+currentChat+"/"+id),{
-    senderId:myPublicId,type:"text",text,createdAt:Date.now(),expiresAt:Date.now()+WEEK
-  });
-  $("text").value="";
+  if(!text || sending) return;
+  sending=true;
+  $("send").disabled=true;
+  try{
+    const id=push(ref(db,"messages/"+currentChat)).key;
+    await set(ref(db,"messages/"+currentChat+"/"+id),{
+      senderId:myPublicId,type:"text",text,createdAt:Date.now(),expiresAt:Date.now()+WEEK
+    });
+    $("text").value="";
+  }catch(e){
+    console.error(e);
+    setStatus("Не удалось отправить сообщение: "+(e.message||e));
+  }finally{
+    sending=false;
+    $("send").disabled=false;
+  }
 }
 
 async function sendFile(file){
@@ -208,3 +244,4 @@ onAuthStateChanged(auth,async user=>{
 </script>
 </body>
 </html>
+
