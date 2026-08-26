@@ -6,50 +6,467 @@
 <aside class="sidebar">
   <div class="sideTop"><div class="brand"><span>F</span> ForceNet</div><button id="settingsBtn" class="iconBtn" title="Настройки">⚙</button></div>
   <button id="me" class="profileCard"></button>
-  <div class="searchRow"><input id="search" placeholder="Имя или ID" autocomplete="off"><button id="findBtn">Найти</button></div>
+  <div class="searchRow"><input id="search" placeholder="Имя, юзернейм или ID" autocomplete="off"><button id="findBtn">Найти</button></div>
   <div id="searchResult" class="searchResult"></div>
-  <div class="sectionTitle">Друзья</div><div class="chats" id="chats"></div>
+  <div class="sectionTitle">Друзья</div>
+  <div class="chats" id="chats"></div>
+  <div class="sectionTitle">Чаты<button id="newGroupBtn" class="iconBtn" title="Новый чат">＋</button></div>
+  <div class="chats" id="groupChats"></div>
   <button id="logout" class="logout">Выйти</button>
 </aside>
 <main class="chat">
-  <header class="chatHead"><button id="backBtn" class="iconBtn mobileOnly">‹</button><div><strong id="chatTitle">Выберите чат</strong><small id="chatSub"></small></div><div class="headSpace"></div></header>
-  <div id="messages" class="messages"><div class="empty">Выберите друга, чтобы начать чат.</div></div>
-  <div id="filePreview" class="filePreview hidden"></div><div class="composer"><input id="fileInput" type="file" hidden accept="image/*,video/*,audio/*,.pdf,.txt,.zip,.doc,.docx,.xls,.xlsx"><button id="attachBtn" class="attachBtn" title="Прикрепить файл">📎</button><input id="text" placeholder="Написать сообщение…" autocomplete="off"><button id="send">Отправить</button></div>
+  <header class="chatHead"><button id="backBtn" class="iconBtn mobileOnly">‹</button><div><strong id="chatTitle">Выберите чат</strong><small id="chatSub"></small></div><div class="headSpace" id="headActions"></div></header>
+  <div id="messages" class="messages"><div class="empty">Выберите друга или чат, чтобы начать общение.</div></div>
+  <div id="filePreview" class="filePreview hidden"></div>
+  <div class="composer"><input id="fileInput" type="file" hidden accept="image/*,video/*,audio/*,.pdf,.txt,.zip,.doc,.docx,.xls,.xlsx"><button id="attachBtn" class="attachBtn" title="Прикрепить файл">📎</button><input id="text" placeholder="Написать сообщение…" autocomplete="off"><button id="send">Отправить</button></div>
 </main>
 </div>
-<div id="settingsModal" class="modal hidden"><div class="modalCard"><div class="modalHead"><h2>Настройки</h2><button id="closeSettings" class="iconBtn">×</button></div><label>Ваш ID</label><div class="copyRow"><input id="myId" readonly><button id="copyId">Копировать</button></div><label>Имя</label><input id="myName"><label>Тема</label><div class="themeRow"><button data-theme="light" class="themeChoice">Светлая</button><button data-theme="dark" class="themeChoice">Тёмная</button></div><button id="saveSettings" class="save">Сохранить</button><p id="settingsStatus"></p></div></div>
+
+<div id="settingsModal" class="modal hidden"><div class="modalCard settingsCard">
+  <div class="modalHead"><h2>Настройки</h2><button id="closeSettings" class="iconBtn">×</button></div>
+  <div class="avatarSettings"><img id="avatarPreview" class="avatar avatarLarge" alt="Аватар"><div><b>Аватар</b><small>Общий для всех пользователей ForceNet — менять нельзя</small></div></div>
+  <label>Ваш ID</label><div class="copyRow"><input id="myId" readonly><button id="copyId">Копировать</button></div>
+  <label>Имя</label><input id="myName">
+  <label>Юзернейм</label><input id="myUsername" placeholder="латиница, цифры, _">
+  <label>Тема</label><div class="themeRow"><button data-theme="light" class="themeChoice">Светлая</button><button data-theme="dark" class="themeChoice">Тёмная</button></div>
+  <button id="saveSettings" class="save">Сохранить</button><p id="settingsStatus"></p>
+</div></div>
+
 <div id="confirmModal" class="modal hidden"><div class="modalCard small"><h2>Удалить сообщение?</h2><p>Сообщение будет удалено у всех участников чата.</p><div class="modalActions"><button id="cancelDelete" class="secondaryBtn">Отмена</button><button id="confirmDelete" class="danger">Удалить</button></div></div></div>
+
+<div id="groupModal" class="modal hidden"><div class="modalCard small"><h2>Новый чат</h2><label>Название</label><input id="groupName" placeholder="Например, Друзья" maxlength="60"><div class="modalActions"><button id="cancelGroup" class="secondaryBtn">Отмена</button><button id="createGroupBtn" class="save" style="width:auto">Создать</button></div></div></div>
+
+<div id="inviteModal" class="modal hidden"><div class="modalCard small"><h2>Приглашение в «<span id="inviteChatName"></span>»</h2><p>Перешлите эту ссылку — по ней сразу присоединятся к чату.</p><div class="copyRow"><input id="inviteLink" readonly><button id="copyInvite">Копировать</button></div><div class="modalActions"><button id="closeInvite" class="secondaryBtn">Готово</button></div></div></div>
+
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 import {getAuth,setPersistence,browserLocalPersistence,onAuthStateChanged,signOut,updateProfile} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
-import {getDatabase,ref,get,set,push,onValue,query,orderByChild,equalTo,update,remove} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
+import {getDatabase,ref,get,set,push,onValue,query,orderByChild,equalTo,update,remove,runTransaction} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
 import {createClient} from "https://esm.sh/@supabase/supabase-js@2";
+
 const firebaseConfig={apiKey:"AIzaSyCiL-Eq-xQNRR8d-bReut-gahzy2BGTWds",authDomain:"forcenet-cefc2.firebaseapp.com",databaseURL:"https://forcenet-cefc2-default-rtdb.europe-west1.firebasedatabase.app/",projectId:"forcenet-cefc2",storageBucket:"forcenet-cefc2.firebasestorage.app",messagingSenderId:"1021268753513",appId:"1:1021268753513:web:f7af3b4e0e4ff40c48f6f8"};
-const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getDatabase(app);await setPersistence(auth,browserLocalPersistence);
-const supabase=createClient("https://btssggabiwcfibijlpee.supabase.co","sb_publishable_lb3EYFwtDxk17z810Ec2Sg_of3yqAoS"); const FILE_BUCKET="chat-files";
-const $=id=>document.getElementById(id); const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
-let myPublicId="",me=null,currentOther=null,currentChat="",unsub=null,profile=null,pendingDelete=null;
+const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getDatabase(app); await setPersistence(auth,browserLocalPersistence);
+const supabase=createClient("https://btssggabiwcfibijlpee.supabase.co","sb_publishable_lb3EYFwtDxk17z810Ec2Sg_of3yqAoS");
+const FILE_BUCKET="chat-files";
+const AVATAR_PATH="default-avatar.png";
+
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+let myPublicId="",me=null,currentOther=null,currentChat="",unsub=null,profile=null,pendingDelete=null,AVATAR_URL="";
 const WEEK=7*24*60*60*1000;
 const chatId=(a,b)=>[a,b].sort().join("_");
-async function getMyUser(uid){const s=await get(query(ref(db,"users"),orderByChild("uid"),equalTo(uid)));let u=null;s.forEach(x=>u={...x.val(),publicId:x.key});return u}
+function normalizeUsername(u){return String(u||"").trim().toLowerCase()}
+function validUsername(u){return /^[a-z0-9_]{3,20}$/.test(u)}
+async function claimUsername(lower,value){
+  const r=await runTransaction(ref(db,"usernames/"+lower),cur=>cur===null?value:undefined);
+  return r.committed && r.snapshot.val()===value;
+}
+
+/* ---------- Профиль ---------- */
+async function getMyUser(uid){
+  const s=await get(query(ref(db,"users"),orderByChild("uid"),equalTo(uid)));
+  let u=null; s.forEach(x=>{u={...x.val(),publicId:x.key};});
+  return u;
+}
 async function loadProfile(user){for(let i=0;i<10;i++){const u=await getMyUser(user.uid);if(u)return u;await new Promise(r=>setTimeout(r,300));}return null}
 function applyTheme(t){document.body.dataset.theme=t||"dark";localStorage.setItem("forceNetTheme",t||"dark")}
-function renderMe(){ $("me").innerHTML=`<span class="avatar">${esc((profile.name||"U")[0].toUpperCase())}</span><span><b>${esc(profile.name)}</b><small>ID ${myPublicId}</small></span>` }
-async function saveFriend(id,u){await set(ref(db,`friends/${myPublicId}/${id}`),{id,name:u.name||id,addedAt:Date.now()});renderFriends()}
-async function removeFriend(id){await remove(ref(db,`friends/${myPublicId}/${id}`));renderFriends()}
-function renderFriends(){onValue(ref(db,`friends/${myPublicId}`),snap=>{const box=$("chats");box.innerHTML="";if(!snap.exists()){box.innerHTML='<div class="emptySide">Пока нет друзей.<br>Найдите человека выше.</div>';return}snap.forEach(x=>{const u=x.val(),b=document.createElement("button");b.className="friend "+(currentOther?.publicId===x.key?"active":"");b.innerHTML=`<span class="avatar">${esc((u.name||"U")[0].toUpperCase())}</span><span><b>${esc(u.name)}</b><small>ID ${x.key}</small></span>`;b.onclick=()=>openChat(x.key,u);box.appendChild(b)})})}
-async function findUser(){const q=$("search").value.trim();$("searchResult").innerHTML="";if(!q)return;if(q===myPublicId)return $("searchResult").textContent="Это ваш ID.";let results=[];if(/^\d{6}$/.test(q)){const s=await get(ref(db,"users/"+q));if(s.exists())results=[[q,s.val()]]}else{const s=await get(ref(db,"users"));s.forEach(x=>{if(x.key!==myPublicId&&String(x.val().name||"").toLowerCase().includes(q.toLowerCase()))results.push([x.key,x.val()])})}
-if(!results.length)return $("searchResult").textContent="Пользователь не найден.";results.slice(0,15).forEach(([id,u])=>{const d=document.createElement("div");d.className="result";d.innerHTML=`<span class="avatar">${esc((u.name||"U")[0].toUpperCase())}</span><span class="resultInfo"><b>${esc(u.name)}</b><small>ID ${id}</small></span><button>＋ Друг</button>`;d.querySelector("button").onclick=async()=>{await saveFriend(id,u);openChat(id,u)};$("searchResult").appendChild(d)})}
-function openChat(id,u){currentOther={...u,publicId:id};currentChat=chatId(myPublicId,id);$("chatTitle").textContent=u.name;$("chatSub").textContent="ID "+id;$("messages").innerHTML='<div class="empty">Загрузка…</div>';document.body.classList.add("chatOpen");if(unsub)unsub();unsub=onValue(ref(db,"messages/"+currentChat),snap=>{const container=$("messages");container.innerHTML="";if(!snap.exists()){container.innerHTML='<div class="empty">Пока нет сообщений.</div>';return}const arr=[];snap.forEach(x=>{const m={id:x.key,...x.val()};if(m.createdAt&&Date.now()-m.createdAt>WEEK){remove(ref(db,`messages/${currentChat}/${m.id}`))}else{arr.push(m)}});arr.sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));arr.forEach(msg=>renderMessage(msg));container.scrollTop=container.scrollHeight})}
-function renderMessage(m){const el=document.createElement("div");el.className="message "+(m.senderId===myPublicId?"mine":"theirs");el.dataset.id=m.id;let body=m.text?`<div class="bubbleText">${esc(m.text)}</div>`:"";if(m.fileUrl){const t=m.fileType||"";if(t.startsWith("image/")){body+=`<a href="${esc(m.fileUrl)}" target="_blank" rel="noopener"><img class="chatImage" src="${esc(m.fileUrl)}" alt="${esc(m.fileName||"Фото")}" loading="lazy"></a>`}else if(t.startsWith("video/")){body+=`<video class="chatVideo" controls preload="metadata" src="${esc(m.fileUrl)}"></video>`}else if(t.startsWith("audio/")){body+=`<audio class="chatAudio" controls src="${esc(m.fileUrl)}"></audio>`}else{body+=`<a class="fileCard" href="${esc(m.fileUrl)}" target="_blank" rel="noopener">📎 ${esc(m.fileName||"Файл")}</a>`}}const time=new Date(m.createdAt||0).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});el.innerHTML=`${body}<div class="msgMeta"><span>${time}${m.edited?" · изменено":""}</span>${m.senderId===myPublicId?`<button class="msgMore">•••</button>`:""}</div>`;if(m.senderId===myPublicId){el.querySelector(".msgMore").onclick=()=>showMsgMenu(m)}$("messages").appendChild(el)}
-function showMsgMenu(m){const action=prompt("Введите: 1 — изменить, 2 — удалить");if(action==="1")editMessage(m);if(action==="2"){pendingDelete=m;$("confirmModal").classList.remove("hidden")}}
-async function editMessage(m){if(m.fileUrl)return alert("Файловое сообщение нельзя редактировать — отправьте новый файл.");const text=prompt("Изменить сообщение:",m.text);if(text===null||!text.trim()||text.trim()===m.text)return;await update(ref(db,`messages/${currentChat}/${m.id}`),{text:text.trim(),edited:true,editedAt:Date.now()})}
-$("confirmDelete").onclick=async()=>{if(pendingDelete){if(pendingDelete.filePath){try{await supabase.storage.from(FILE_BUCKET).remove([pendingDelete.filePath])}catch(e){console.warn(e)}}await remove(ref(db,`messages/${currentChat}/${pendingDelete.id}`));}pendingDelete=null;$("confirmModal").classList.add("hidden")};$("cancelDelete").onclick=()=>{$("confirmModal").classList.add("hidden");pendingDelete=null};
-async function uploadFile(file,messageId){const safe=file.name.replace(/[^a-zA-Z0-9._-]/g,"_");const path=`${myPublicId}/${currentChat}/${messageId}-${Date.now()}-${safe}`;const {error}=await supabase.storage.from(FILE_BUCKET).upload(path,file,{contentType:file.type||"application/octet-stream",upsert:false});if(error)throw error;return {url:supabase.storage.from(FILE_BUCKET).getPublicUrl(path).data.publicUrl,path};}
-async function send(){if(!currentOther)return alert("Сначала выберите друга.");const text=$("text").value.trim(),file=$("fileInput").files[0];if(!text&&!file)return;const msgRef=push(ref(db,"messages/"+currentChat));try{const data={senderId:myPublicId,text,createdAt:Date.now(),expiresAt:Date.now()+WEEK};if(file){if(file.size>100*1024*1024)throw new Error("Файл больше 100 МБ");const u=await uploadFile(file,msgRef.key);Object.assign(data,{fileUrl:u.url,filePath:u.path,fileName:file.name,fileType:file.type,fileSize:file.size});}await set(msgRef,data);$("text").value="";$("fileInput").value="";$("filePreview").classList.add("hidden");$("filePreview").textContent="";}catch(e){console.error(e);alert("Не удалось загрузить файл. Проверьте bucket chat-files и Storage policies в Supabase.")}}
-$("attachBtn").onclick=()=>{if(!currentOther)return alert("Сначала выберите друга.");$("fileInput").click()};$("fileInput").onchange=e=>{const f=e.target.files[0];const b=$("filePreview");if(!f){b.classList.add("hidden");return}b.classList.remove("hidden");b.textContent=`Прикреплено: ${f.name}`};$("send").onclick=send;$("text").onkeydown=e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send()}};$("findBtn").onclick=findUser;$("search").onkeydown=e=>{if(e.key==="Enter")findUser()};$("logout").onclick=()=>signOut(auth);
-$("settingsBtn").onclick=()=>{$("myId").value=myPublicId;$("myName").value=profile.name||"";$("settingsModal").classList.remove("hidden")};$("closeSettings").onclick=()=>$("settingsModal").classList.add("hidden");$("copyId").onclick=async()=>{await navigator.clipboard.writeText(myPublicId);$("settingsStatus").textContent="ID скопирован"};$("saveSettings").onclick=async()=>{const name=$("myName").value.trim();if(name.length<2)return $("settingsStatus").textContent="Имя должно быть от 2 символов.";const theme=document.querySelector(".themeChoice.selected")?.dataset.theme||document.body.dataset.theme;await update(ref(db,"users/"+myPublicId),{name,theme});await updateProfile(me,{displayName:name});profile.name=name;applyTheme(theme);renderMe();$("settingsStatus").textContent="Сохранено"};document.querySelectorAll(".themeChoice").forEach(b=>b.onclick=()=>{document.querySelectorAll(".themeChoice").forEach(x=>x.classList.remove("selected"));b.classList.add("selected");applyTheme(b.dataset.theme)});
+function renderMe(){$("me").innerHTML=`<img class="avatar" src="${AVATAR_URL}" alt=""><span><b>${esc(profile.name)}</b><small>@${esc(profile.username||"—")} · ID ${myPublicId}</small></span>`}
+
+/* ---------- Общий аватар в Supabase Storage (один на всех) ---------- */
+async function ensureDefaultAvatar(){
+  const cached=localStorage.getItem("forceNetAvatarUrl");
+  if(cached) return cached;
+  const pub=supabase.storage.from(FILE_BUCKET).getPublicUrl(AVATAR_PATH).data.publicUrl;
+  try{
+    const head=await fetch(pub,{method:"HEAD"});
+    if(head.ok){ localStorage.setItem("forceNetAvatarUrl",pub); return pub; }
+  }catch(e){/* файла ещё нет — создадим ниже */}
+  try{
+    const canvas=document.createElement("canvas"); canvas.width=128; canvas.height=128;
+    const ctx=canvas.getContext("2d");
+    const grad=ctx.createLinearGradient(0,0,128,128);
+    grad.addColorStop(0,"#6c5dff"); grad.addColorStop(1,"#8b7bff");
+    ctx.fillStyle=grad; ctx.beginPath(); ctx.arc(64,64,64,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle="rgba(255,255,255,.92)";
+    ctx.beginPath(); ctx.arc(64,50,22,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(64,112,34,30,0,Math.PI,0,true); ctx.fill();
+    const blob=await new Promise(res=>canvas.toBlob(res,"image/png"));
+    await supabase.storage.from(FILE_BUCKET).upload(AVATAR_PATH,blob,{contentType:"image/png",upsert:true});
+  }catch(e){ console.warn("Не удалось создать общий аватар",e); }
+  localStorage.setItem("forceNetAvatarUrl",pub);
+  return pub;
+}
+
+/* ---------- Друзья ---------- */
+async function saveFriend(id,u){ await set(ref(db,`friends/${myPublicId}/${id}`),{id,name:u.name||id,addedAt:Date.now()}); }
+async function renameFriend(id,current){
+  const name=prompt("Как этот друг будет называться у вас (видно только вам):",current);
+  if(name===null) return;
+  const trimmed=name.trim();
+  if(!trimmed) return;
+  await update(ref(db,`friends/${myPublicId}/${id}`),{alias:trimmed});
+}
+function renderFriends(){
+  onValue(ref(db,`friends/${myPublicId}`),snap=>{
+    const box=$("chats"); box.innerHTML="";
+    if(!snap.exists()){ box.innerHTML='<div class="emptySide">Пока нет друзей.<br>Найдите человека выше.</div>'; return; }
+    snap.forEach(x=>{
+      const f=x.val();
+      const displayName=f.alias||f.name;
+      const b=document.createElement("button");
+      b.className="friend "+(currentOther&&!currentOther.isGroup&&currentOther.id===x.key?"active":"");
+      b.dataset.id=x.key; b.dataset.kind="friend";
+      b.innerHTML=`<img class="avatar" src="${AVATAR_URL}" alt=""><span><b>${esc(displayName)}</b><small>ID ${x.key}${f.alias?` · ${esc(f.name)}`:""}</small></span><button class="friendRename" title="Переименовать для себя">✎</button>`;
+      b.querySelector(".friendRename").onclick=async ev=>{ ev.stopPropagation(); await renameFriend(x.key,displayName); };
+      b.onclick=()=>openChat(x.key,f);
+      box.appendChild(b);
+    });
+  });
+}
+
+/* ---------- Групповые чаты ---------- */
+async function createGroup(name){
+  const gRef=push(ref(db,"groups"));
+  const id=gRef.key;
+  await set(gRef,{name,ownerId:myPublicId,createdAt:Date.now(),members:{[myPublicId]:true}});
+  await set(ref(db,`userGroups/${myPublicId}/${id}`),true);
+  return id;
+}
+async function joinGroup(groupId){
+  const snap=await get(ref(db,"groups/"+groupId));
+  if(!snap.exists()){ alert("Такой чат не найден — возможно, ссылка устарела."); return null; }
+  await update(ref(db,`groups/${groupId}/members`),{[myPublicId]:true});
+  await set(ref(db,`userGroups/${myPublicId}/${groupId}`),true);
+  const fresh=await get(ref(db,"groups/"+groupId));
+  return fresh.val();
+}
+function renderGroups(){
+  onValue(ref(db,`userGroups/${myPublicId}`),async snap=>{
+    const box=$("groupChats"); box.innerHTML="";
+    if(!snap.exists()){ box.innerHTML='<div class="emptySide">Пока нет групповых чатов.<br>Нажмите ＋, чтобы создать.</div>'; return; }
+    const ids=[]; snap.forEach(x=>{ids.push(x.key);});
+    for(const id of ids){
+      const gs=await get(ref(db,"groups/"+id));
+      if(!gs.exists()){ remove(ref(db,`userGroups/${myPublicId}/${id}`)).catch(()=>{}); continue; }
+      const g=gs.val();
+      const count=g.members?Object.keys(g.members).length:0;
+      const b=document.createElement("button");
+      b.className="friend "+(currentOther&&currentOther.isGroup&&currentOther.id===id?"active":"");
+      b.dataset.id=id; b.dataset.kind="group";
+      b.innerHTML=`<span class="avatar groupAvatar">#</span><span><b>${esc(g.name)}</b><small>${count} участ.</small></span>`;
+      b.onclick=()=>openGroup(id,g);
+      box.appendChild(b);
+    }
+  });
+}
+function openInvite(id,name){
+  const link=`${location.origin}${location.pathname}?join=${id}`;
+  $("inviteChatName").textContent=name;
+  $("inviteLink").value=link;
+  $("inviteModal").classList.remove("hidden");
+}
+async function handleJoinParam(){
+  const params=new URLSearchParams(location.search);
+  const joinId=params.get("join");
+  if(!joinId) return;
+  history.replaceState({},"",location.pathname);
+  const g=await joinGroup(joinId);
+  if(g) openGroup(joinId,g);
+}
+
+/* ---------- Поиск (по ID, юзернейму или имени) ---------- */
+async function findUser(){
+  const raw=$("search").value.trim();
+  $("searchResult").innerHTML="";
+  if(!raw) return;
+  if(raw===myPublicId) return $("searchResult").textContent="Это ваш ID.";
+  let results=[];
+  if(/^\d{6}$/.test(raw)){
+    const s=await get(ref(db,"users/"+raw));
+    if(s.exists()) results=[[raw,s.val()]];
+  }else{
+    const lower=raw.replace(/^@/,"").toLowerCase();
+    if(validUsername(lower)){
+      const idSnap=await get(ref(db,"usernames/"+lower));
+      if(idSnap.exists() && typeof idSnap.val()==="string" && !idSnap.val().startsWith("pending_")){
+        const us=await get(ref(db,"users/"+idSnap.val()));
+        if(us.exists()) results=[[idSnap.val(),us.val()]];
+      }
+    }
+  }
+  if(!results.length){
+    const s=await get(ref(db,"users"));
+    const needle=raw.toLowerCase().replace(/^@/,"");
+    s.forEach(x=>{
+      if(x.key===myPublicId) return;
+      const u=x.val();
+      if(String(u.name||"").toLowerCase().includes(needle) || String(u.username||"").toLowerCase().includes(needle)){
+        results.push([x.key,u]);
+      }
+    });
+  }
+  if(!results.length) return $("searchResult").textContent="Пользователь не найден.";
+  const seen=new Set();
+  results.slice(0,15).forEach(([id,u])=>{
+    if(seen.has(id)) return; seen.add(id);
+    const d=document.createElement("div");
+    d.className="result";
+    d.innerHTML=`<img class="avatar" src="${AVATAR_URL}" alt=""><span class="resultInfo"><b>${esc(u.name)}</b><small>${u.username?`@${esc(u.username)} · `:""}ID ${id}</small></span><button>＋ Друг</button>`;
+    d.querySelector("button").onclick=async()=>{ await saveFriend(id,u); openChat(id,u); };
+    $("searchResult").appendChild(d);
+  });
+}
+
+/* ---------- Открытие чата (личного или группового) ---------- */
+function highlightActive(){
+  document.querySelectorAll(".friend").forEach(b=>{
+    const isGroup=b.dataset.kind==="group";
+    b.classList.toggle("active", !!currentOther && currentOther.isGroup===isGroup && currentOther.id===b.dataset.id);
+  });
+}
+function startConversationUI(){
+  $("chatTitle").textContent=currentOther.name;
+  $("chatSub").textContent=currentOther.isGroup?`Групповой чат`:`ID ${currentOther.id}`;
+  $("messages").innerHTML='<div class="empty">Загрузка…</div>';
+  document.body.classList.add("chatOpen");
+  const headActions=$("headActions"); headActions.innerHTML="";
+  if(currentOther.isGroup){
+    const btn=document.createElement("button");
+    btn.className="iconBtn"; btn.title="Пригласить"; btn.textContent="🔗";
+    btn.onclick=()=>openInvite(currentOther.id,currentOther.name);
+    headActions.appendChild(btn);
+  }
+  highlightActive();
+}
+function openChat(id,u){
+  currentOther={id,name:u.alias||u.name,realName:u.name,isGroup:false};
+  currentChat=chatId(myPublicId,id);
+  startConversationUI();
+  subscribeMessages();
+}
+function openGroup(id,g){
+  currentOther={id,name:g.name,isGroup:true};
+  currentChat="g_"+id;
+  startConversationUI();
+  subscribeMessages();
+}
+
+/* ---------- Сообщения ---------- */
+function subscribeMessages(){
+  if(unsub) unsub();
+  unsub=onValue(ref(db,"messages/"+currentChat),snap=>{
+    const container=$("messages");
+    if(!snap.exists()){ container.innerHTML='<div class="empty">Пока нет сообщений.</div>'; return; }
+    const arr=[];
+    snap.forEach(x=>{
+      const m={id:x.key,...x.val()};
+      if(m.createdAt && Date.now()-m.createdAt>WEEK){
+        // Автоудаление через неделю — вместе с файлом в Supabase, чтобы не копить мусор.
+        if(m.filePath) supabase.storage.from(FILE_BUCKET).remove([m.filePath]).catch(()=>{});
+        remove(ref(db,`messages/${currentChat}/${m.id}`)).catch(()=>{});
+      }else{
+        arr.push(m);
+      }
+    });
+    arr.sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
+    container.innerHTML="";
+    if(!arr.length){ container.innerHTML='<div class="empty">Пока нет сообщений.</div>'; return; }
+    arr.forEach(m=>renderMessage(m));
+    container.scrollTop=container.scrollHeight;
+  });
+}
+function renderMessage(m,existingEl){
+  const mine=m.senderId===myPublicId;
+  const el=existingEl||document.createElement("div");
+  el.className="message "+(mine?"mine":"theirs");
+  el.dataset.id=m.id;
+  let body="";
+  if(currentOther?.isGroup && !mine) body+=`<div class="senderName">${esc(m.senderName||"Участник")}</div>`;
+  if(m.text) body+=`<div class="bubbleText">${esc(m.text)}</div>`;
+  if(m.fileUrl){
+    const t=m.fileType||"";
+    if(t.startsWith("image/")) body+=`<a href="${esc(m.fileUrl)}" target="_blank" rel="noopener"><img class="chatImage" src="${esc(m.fileUrl)}" alt="${esc(m.fileName||"Фото")}" loading="lazy"></a>`;
+    else if(t.startsWith("video/")) body+=`<video class="chatVideo" controls preload="metadata" src="${esc(m.fileUrl)}"></video>`;
+    else if(t.startsWith("audio/")) body+=`<audio class="chatAudio" controls src="${esc(m.fileUrl)}"></audio>`;
+    else body+=`<a class="fileCard" href="${esc(m.fileUrl)}" target="_blank" rel="noopener">📎 ${esc(m.fileName||"Файл")}</a>`;
+    body+=`<a class="downloadFile" href="${esc(m.fileUrl)}" download="${esc(m.fileName||"")}">⬇ Скачать</a>`;
+  }
+  const time=new Date(m.createdAt||0).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
+  let actions="";
+  if(mine) actions=`<div class="msgActions">${m.fileUrl?"":'<button class="editBtn" title="Изменить">✎</button>'}<button class="delBtn" title="Удалить">🗑</button></div>`;
+  el.innerHTML=`${body}<div class="msgMeta"><span>${time}${m.edited?" · изменено":""}</span></div>${actions}`;
+  if(mine){
+    const editBtn=el.querySelector(".editBtn");
+    if(editBtn) editBtn.onclick=()=>startEdit(m,el);
+    el.querySelector(".delBtn").onclick=()=>requestDelete(m);
+  }
+  if(!existingEl) $("messages").appendChild(el);
+  return el;
+}
+function startEdit(m,el){
+  const current=m.text||"";
+  el.innerHTML=`<textarea class="editArea">${esc(current)}</textarea><div class="msgActions"><button class="editSaveBtn">✓ Сохранить</button><button class="editCancelBtn">✕ Отмена</button></div>`;
+  const ta=el.querySelector(".editArea");
+  ta.focus(); ta.setSelectionRange(ta.value.length,ta.value.length);
+  el.querySelector(".editCancelBtn").onclick=()=>renderMessage(m,el);
+  const save=async()=>{
+    const val=ta.value.trim();
+    if(!val || val===m.text) return renderMessage(m,el);
+    try{ await update(ref(db,`messages/${currentChat}/${m.id}`),{text:val,edited:true,editedAt:Date.now()}); }
+    catch(e){ console.error(e); alert("Не удалось изменить сообщение."); renderMessage(m,el); }
+  };
+  el.querySelector(".editSaveBtn").onclick=save;
+  ta.onkeydown=e=>{
+    if(e.key==="Enter" && !e.shiftKey){ e.preventDefault(); save(); }
+    if(e.key==="Escape") el.querySelector(".editCancelBtn").click();
+  };
+}
+function requestDelete(m){ pendingDelete=m; $("confirmModal").classList.remove("hidden"); }
+$("confirmDelete").onclick=async()=>{
+  if(pendingDelete){
+    if(pendingDelete.filePath){ try{ await supabase.storage.from(FILE_BUCKET).remove([pendingDelete.filePath]); }catch(e){ console.warn(e); } }
+    await remove(ref(db,`messages/${currentChat}/${pendingDelete.id}`));
+  }
+  pendingDelete=null; $("confirmModal").classList.add("hidden");
+};
+$("cancelDelete").onclick=()=>{ $("confirmModal").classList.add("hidden"); pendingDelete=null; };
+
+/* ---------- Отправка ---------- */
+async function uploadFile(file,messageId){
+  const safe=file.name.replace(/[^a-zA-Z0-9._-]/g,"_");
+  const path=`${myPublicId}/${currentChat}/${messageId}-${Date.now()}-${safe}`;
+  const {error}=await supabase.storage.from(FILE_BUCKET).upload(path,file,{contentType:file.type||"application/octet-stream",upsert:false});
+  if(error) throw error;
+  return {url:supabase.storage.from(FILE_BUCKET).getPublicUrl(path).data.publicUrl,path};
+}
+async function send(){
+  if(!currentOther) return alert("Сначала выберите чат.");
+  const text=$("text").value.trim(), file=$("fileInput").files[0];
+  if(!text && !file) return;
+  const msgRef=push(ref(db,"messages/"+currentChat));
+  try{
+    const data={senderId:myPublicId,text,createdAt:Date.now(),expiresAt:Date.now()+WEEK};
+    if(currentOther.isGroup) data.senderName=profile.name;
+    if(file){
+      if(file.size>100*1024*1024) throw new Error("Файл больше 100 МБ");
+      const u=await uploadFile(file,msgRef.key);
+      Object.assign(data,{fileUrl:u.url,filePath:u.path,fileName:file.name,fileType:file.type,fileSize:file.size});
+    }
+    await set(msgRef,data);
+    $("text").value=""; $("fileInput").value=""; $("filePreview").classList.add("hidden"); $("filePreview").textContent="";
+  }catch(e){
+    console.error(e);
+    alert(e.message && e.message.includes("МБ") ? e.message : "Не удалось отправить сообщение. Проверьте подключение и настройки Supabase (bucket chat-files).");
+  }
+}
+
+/* ---------- Проактивная очистка старше недели по всем чатам ---------- */
+async function cleanupAllChats(){
+  try{
+    const ids=[];
+    const friendsSnap=await get(ref(db,`friends/${myPublicId}`));
+    friendsSnap.forEach(x=>{ ids.push(chatId(myPublicId,x.key)); });
+    const groupsSnap=await get(ref(db,`userGroups/${myPublicId}`));
+    groupsSnap.forEach(x=>{ ids.push("g_"+x.key); });
+    for(const cid of ids){
+      const msnap=await get(ref(db,"messages/"+cid));
+      if(!msnap.exists()) continue;
+      msnap.forEach(x=>{
+        const m=x.val();
+        if(m.createdAt && Date.now()-m.createdAt>WEEK){
+          if(m.filePath) supabase.storage.from(FILE_BUCKET).remove([m.filePath]).catch(()=>{});
+          remove(ref(db,`messages/${cid}/${x.key}`)).catch(()=>{});
+        }
+      });
+    }
+  }catch(e){ console.warn("Ошибка фоновой очистки",e); }
+}
+
+/* ---------- Настройки ---------- */
+$("settingsBtn").onclick=()=>{
+  $("myId").value=myPublicId;
+  $("myName").value=profile.name||"";
+  $("myUsername").value=profile.username||"";
+  $("avatarPreview").src=AVATAR_URL;
+  document.querySelectorAll(".themeChoice").forEach(b=>b.classList.toggle("selected",b.dataset.theme===(document.body.dataset.theme||"dark")));
+  $("settingsStatus").textContent="";
+  $("settingsModal").classList.remove("hidden");
+};
+$("closeSettings").onclick=()=>$("settingsModal").classList.add("hidden");
+$("copyId").onclick=async()=>{ await navigator.clipboard.writeText(myPublicId); $("settingsStatus").textContent="ID скопирован"; };
+$("saveSettings").onclick=async()=>{
+  const name=$("myName").value.trim();
+  const usernameLower=normalizeUsername($("myUsername").value);
+  if(name.length<2) return $("settingsStatus").textContent="Имя должно быть от 2 символов.";
+  if(!validUsername(usernameLower)) return $("settingsStatus").textContent="Юзернейм: 3–20 символов, латиница/цифры/_.";
+  const theme=document.querySelector(".themeChoice.selected")?.dataset.theme || document.body.dataset.theme;
+  $("settingsStatus").textContent="Сохраняем…";
+  try{
+    if(usernameLower!==normalizeUsername(profile.username||"")){
+      const ok=await claimUsername(usernameLower,myPublicId);
+      if(!ok){ $("settingsStatus").textContent="Этот юзернейм уже занят."; return; }
+      if(profile.username) await remove(ref(db,"usernames/"+normalizeUsername(profile.username))).catch(()=>{});
+      profile.username=usernameLower;
+    }
+    await update(ref(db,"users/"+myPublicId),{name,username:profile.username,theme});
+    await updateProfile(me,{displayName:name});
+    profile.name=name;
+    applyTheme(theme);
+    renderMe();
+    $("settingsStatus").textContent="Сохранено";
+  }catch(e){ console.error(e); $("settingsStatus").textContent=e.message||"Ошибка сохранения."; }
+};
+document.querySelectorAll(".themeChoice").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll(".themeChoice").forEach(x=>x.classList.remove("selected"));
+  b.classList.add("selected"); applyTheme(b.dataset.theme);
+});
+
+/* ---------- Новый групповой чат / приглашения ---------- */
+$("newGroupBtn").onclick=()=>{ $("groupName").value=""; $("groupModal").classList.remove("hidden"); $("groupName").focus(); };
+$("cancelGroup").onclick=()=>$("groupModal").classList.add("hidden");
+$("createGroupBtn").onclick=async()=>{
+  const name=$("groupName").value.trim();
+  if(name.length<2) return alert("Введите название чата.");
+  $("groupModal").classList.add("hidden");
+  const id=await createGroup(name);
+  openInvite(id,name);
+  const gs=await get(ref(db,"groups/"+id));
+  openGroup(id,gs.val());
+};
+$("closeInvite").onclick=()=>$("inviteModal").classList.add("hidden");
+$("copyInvite").onclick=async()=>{
+  await navigator.clipboard.writeText($("inviteLink").value);
+  $("copyInvite").textContent="Скопировано"; setTimeout(()=>$("copyInvite").textContent="Копировать",1500);
+};
+
+/* ---------- Прочие обработчики ---------- */
+$("attachBtn").onclick=()=>{ if(!currentOther) return alert("Сначала выберите чат."); $("fileInput").click(); };
+$("fileInput").onchange=e=>{
+  const f=e.target.files[0]; const b=$("filePreview");
+  if(!f){ b.classList.add("hidden"); return; }
+  b.classList.remove("hidden"); b.textContent=`Прикреплено: ${f.name}`;
+};
+$("send").onclick=send;
+$("text").onkeydown=e=>{ if(e.key==="Enter" && !e.shiftKey){ e.preventDefault(); send(); } };
+$("findBtn").onclick=findUser;
+$("search").onkeydown=e=>{ if(e.key==="Enter") findUser(); };
+$("logout").onclick=()=>signOut(auth);
 $("backBtn").onclick=()=>document.body.classList.remove("chatOpen");
-onAuthStateChanged(auth,async user=>{if(!user)return location.replace("../registration/registration.html");me=user;profile=await loadProfile(user);if(!profile){alert("Профиль не найден. Перезайдите — профиль будет восстановлен автоматически.");return signOut(auth)}myPublicId=profile.publicId;localStorage.setItem("forceNetPublicId",myPublicId);applyTheme(profile.theme||localStorage.getItem("forceNetTheme")||"dark");renderMe();renderFriends()});
+
+onAuthStateChanged(auth,async user=>{
+  if(!user) return location.replace("../registration/registration.html");
+  me=user;
+  profile=await loadProfile(user);
+  if(!profile){ alert("Профиль не найден. Перезайдите — профиль будет восстановлен автоматически."); return signOut(auth); }
+  myPublicId=profile.publicId;
+  localStorage.setItem("forceNetPublicId",myPublicId);
+  applyTheme(profile.theme||localStorage.getItem("forceNetTheme")||"dark");
+  AVATAR_URL=await ensureDefaultAvatar();
+  renderMe();
+  renderFriends();
+  renderGroups();
+  cleanupAllChats();
+  await handleJoinParam();
+});
 </script>
 </body></html>
