@@ -77,7 +77,7 @@ function setStatus(t){$("uploadStatus").textContent=t||"";}
 async function getMyUser(uid){
   const q=query(ref(db,"users"),orderByChild("uid"),equalTo(uid));
   const snap=await get(q);
-  let u=null; snap.forEach(x=>u={...x.val(),publicId:x.key});
+  let u=null; snap.forEach(x=>{u={...x.val(),publicId:x.key};});
   return u;
 }
 async function cleanupOldMessages(chat){
@@ -156,7 +156,7 @@ function openChat(otherId,u){
   if(messagesUnsub) messagesUnsub();
   messagesUnsub=onValue(ref(db,"messages/"+currentChat),snap=>{
     const arr=[];
-    snap.forEach(x=>arr.push({id:x.key,...x.val()}));
+    snap.forEach(x=>{arr.push({id:x.key,...x.val()});});
     arr.sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
     $("messages").innerHTML="";
     if(!arr.length) $("messages").innerHTML='<div class="empty">Пока нет сообщений.</div>';
@@ -244,4 +244,3 @@ onAuthStateChanged(auth,async user=>{
 </script>
 </body>
 </html>
-
