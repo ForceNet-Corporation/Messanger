@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>ForceNet — Регистрация</title>
+  <link rel="stylesheet" href="css/reg.css">
+</head>
+<body>
+  <main class="card">
+    <h1>ForceNet</h1>
+    <p class="muted">Создай аккаунт</p>
+
+    <form id="registerForm">
+      <input id="email" type="email" placeholder="Почта" required>
+      <input id="password" type="password" placeholder="Пароль" minlength="6" required>
+      <input id="password2" type="password" placeholder="Повторите пароль" minlength="6" required>
+      <input id="name" type="text" placeholder="Имя" maxlength="40" required>
+      <button type="submit">Зарегистрироваться</button>
+    </form>
+
+    <div class="divider">или</div>
+    <form id="loginForm">
+      <input id="loginEmail" type="email" placeholder="Почта" required>
+      <input id="loginPassword" type="password" placeholder="Пароль" required>
+      <button type="submit" class="secondary">Войти</button>
+    </form>
+
+    <p id="status" class="status"></p>
+  </main>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+import { getDatabase, ref, set, get, query, orderByChild, equalTo } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCiL-Eq-xQNRR8d-bReut-gahzy2BGTWds",
+  authDomain: "forcenet-cefc2.firebaseapp.com",
+  projectId: "forcenet-cefc2",
+  storageBucket: "forcenet-cefc2.firebasestorage.app",
+  messagingSenderId: "1021268753513",
+  appId: "1:1021268753513:web:f7af3b4e0e4ff40c48f6f8"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
+
+const status = document.getElementById("status");
+const msg = t => status.textContent = t;
+
+function makePublicId() {
+  return String(Math.floor(100000 + Math.random() * 900000));
+}
+
+async function uniqueId() {
+  for (let i=0;i<20;i++) {
+    const id=makePublicId();
+    const snap=await get(ref(db,"users/"+id));
+    if(!snap.exists()) return id;
+  }
+  throw new Error("Не удалось создать ID");
+}
+
+document.getElementById("registerForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const email=document.getElementById("email").value.trim();
+  const password=document.getElementById("password").value;
+  const password2=document.getElementById("password2").value;
+  const name=document.getElementById("name").value.trim();
+
+  if(password!==password2) return msg("Пароли не совпадают.");
+  if(name.length<2) return msg("Имя слишком короткое.");
+
+  try {
+    msg("Создаём аккаунт...");
+    const cred=await createUserWithEmailAndPassword(auth,email,password);
+    await updateProfile(cred.user,{displayName:name});
+    const publicId=await uniqueId();
+
+    await set(ref(db,"users/"+publicId),{
+      uid:cred.user.uid,
+      id:publicId,
+      name,
+      email,
+      createdAt:Date.now()
+    });
+
+    localStorage.setItem("forceNetPublicId",publicId);
+    location.replace("../main/main.html");
+  } catch(err) {
+    console.error(err);
+    msg(err.message || "Ошибка регистрации.");
+  }
+});
+
+document.getElementById("loginForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  try {
+    msg("Входим...");
+    const cred=await signInWithEmailAndPassword(
+      auth,
+      document.getElementById("loginEmail").value.trim(),
+      document.getElementById("loginPassword").value
+    );
+    const q=query(ref(db,"users"),orderByChild("uid"),equalTo(cred.user.uid));
+    const snap=await get(q);
+    let publicId="";
+    snap.forEach(x=>publicId=x.key);
+    if(publicId) localStorage.setItem("forceNetPublicId",publicId);
+    location.replace("../main/main.html");
+  } catch(err) {
+    console.error(err);
+    msg(err.message || "Ошибка входа.");
+  }
+});
+</script>
+</body>
+</html>
