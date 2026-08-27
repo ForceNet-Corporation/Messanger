@@ -2,8 +2,9 @@
 <html lang="ru">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ForceNet — Вход</title><link rel="stylesheet" href="css/reg.css"></head>
 <body>
-<main class="card">
+<main class="card" id="card">
   <div class="logo">F</div><h1>ForceNet</h1><p class="muted">Личный мессенджер без лишнего</p>
+  <div id="resumeLoader" class="resumeLoader hidden"><div class="spinner"></div><p>Входим…</p></div>
   <form id="registerForm">
     <input id="email" type="email" placeholder="Почта" autocomplete="email" required>
     <input id="password" type="password" placeholder="Пароль (минимум 6 символов)" minlength="6" autocomplete="new-password" required>
@@ -45,11 +46,24 @@ async function findMyProfile(uid){
   return out;
 }
 
+function setResuming(on){
+  $("resumeLoader").classList.toggle("hidden",!on);
+  $("registerForm").style.display=on?"none":"";
+  $("loginForm").style.display=on?"none":"";
+  document.querySelector(".divider").style.display=on?"none":"";
+}
 onAuthStateChanged(auth,async user=>{
-  if(!user || busy) return;
+  if(!user || busy){ setResuming(false); return; }
   const p=await findMyProfile(user.uid);
   if(p) location.replace("../main/main.html");
+  else setResuming(false);
 });
+// Пока Firebase восстанавливает сохранённую сессию (через локальное хранилище),
+// прячем форму входа, чтобы не было "мигания" перед автоматическим входом.
+if(localStorage.getItem("forceNetPublicId")){
+  setResuming(true);
+  setTimeout(()=>{ if(!auth.currentUser) setResuming(false); },4000);
+}
 
 $("registerForm").onsubmit=async e=>{
  e.preventDefault(); if(busy)return; busy=true;
