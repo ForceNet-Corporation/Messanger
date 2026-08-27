@@ -23,7 +23,7 @@
 </main>
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-import {getAuth,setPersistence,browserLocalPersistence,createUserWithEmailAndPassword,signInWithEmailAndPassword,updateProfile,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+import {getAuth,setPersistence,browserLocalPersistence,createUserWithEmailAndPassword,signInWithEmailAndPassword,updateProfile,deleteUser,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 import {getDatabase,ref,set,get,remove,query,orderByChild,equalTo,runTransaction} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
 const firebaseConfig={apiKey:"AIzaSyCiL-Eq-xQNRR8d-bReut-gahzy2BGTWds",authDomain:"forcenet-cefc2.firebaseapp.com",databaseURL:"https://forcenet-cefc2-default-rtdb.europe-west1.firebasedatabase.app/",projectId:"forcenet-cefc2",storageBucket:"forcenet-cefc2.firebasestorage.app",messagingSenderId:"1021268753513",appId:"1:1021268753513:web:f7af3b4e0e4ff40c48f6f8"};
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getDatabase(app); await setPersistence(auth,browserLocalPersistence);
@@ -73,24 +73,28 @@ $("registerForm").onsubmit=async e=>{
  if(name.length<2){busy=false;return msg("Имя слишком короткое.")}
  if(!validUsername(usernameLower)){busy=false;return msg("Юзернейм: 3–20 символов, латинские буквы, цифры и _.")}
  try{
-   msg("Проверяем юзернейм…");
-   // Резервируем юзернейм временной меткой ДО создания аккаунта, чтобы не было гонки.
-   const reserved=await claimUsername(usernameLower,"pending_"+Date.now());
-   if(!reserved){busy=false;return msg("Этот юзернейм уже занят.")}
+   // Сначала создаём Auth-сессию. Раньше /usernames резервировался ДО авторизации,
+   // из-за чего Firebase RTDB с правилами "только authenticated" возвращал permission_denied.
+   msg("Создаём аккаунт…");
+   const cred=await createUserWithEmailAndPassword(auth,email,password);
+   let usernameClaimed=false;
    try{
-     msg("Создаём аккаунт…");
-     const cred=await createUserWithEmailAndPassword(auth,email,password);
      await updateProfile(cred.user,{displayName:name});
+     msg("Проверяем юзернейм…");
+     const reserved=await claimUsername(usernameLower,"pending_"+Date.now());
+     if(!reserved) throw Object.assign(new Error("Этот юзернейм уже занят."),{code:"username-already-taken"});
+     usernameClaimed=true;
      const publicId=await uniqueId();
      await set(ref(db,"usernames/"+usernameLower),publicId);
      await set(ref(db,"users/"+publicId),{uid:cred.user.uid,id:publicId,name,username:usernameLower,email,createdAt:Date.now(),theme:"dark"});
      localStorage.setItem("forceNetPublicId",publicId);
      location.replace("../main/main.html");
    }catch(innerErr){
-     await remove(ref(db,"usernames/"+usernameLower)).catch(()=>{});
+     if(usernameClaimed) await remove(ref(db,"usernames/"+usernameLower)).catch(()=>{});
+     await deleteUser(cred.user).catch(()=>{});
      throw innerErr;
    }
- }catch(err){console.error(err);msg(err.code==="auth/email-already-in-use"?"Эта почта уже зарегистрирована.":(err.message||"Ошибка регистрации."));busy=false}
+ }catch(err){console.error(err);msg(err.code==="auth/email-already-in-use"?"Эта почта уже зарегистрирована.":err.code==="username-already-taken"?"Этот юзернейм уже занят.":err.code==="PERMISSION_DENIED"||err.code==="permission-denied"?"Нет доступа к базе данных. Проверьте правила Firebase Realtime Database.":(err.message||"Ошибка регистрации."));busy=false}
 };
 
 $("loginForm").onsubmit=async e=>{
