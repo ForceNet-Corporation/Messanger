@@ -25,11 +25,30 @@
 <div id="settingsModal" class="modal hidden"><div class="modalCard settingsCard">
   <div class="modalHead"><h2>Настройки</h2><button id="closeSettings" class="iconBtn">×</button></div>
   <div class="avatarSettings"><img id="avatarPreview" class="avatar avatarLarge" alt="Аватар"><div><b>Аватар</b><small>Общий для всех пользователей ForceNet — менять нельзя</small></div></div>
-  <label>Ваш ID</label><div class="copyRow"><input id="myId" readonly><button id="copyId">Копировать</button></div>
+  <label>Ваш ID</label><div class="copyRow"><input id="myId" readonly><button id="copyId">Копировать</button><button id="showQrBtn" class="secondaryBtn">QR-код</button></div>
   <label>Имя</label><input id="myName">
   <label>Юзернейм</label><input id="myUsername" placeholder="латиница, цифры, _">
   <label>Тема</label><div class="themeRow"><button data-theme="light" class="themeChoice">Светлая</button><button data-theme="dark" class="themeChoice">Тёмная</button></div>
   <button id="saveSettings" class="save">Сохранить</button><p id="settingsStatus"></p>
+  <div class="settingsDivider"></div>
+  <button id="logoutSettings" class="secondaryBtn" style="width:100%">Выйти из аккаунта</button>
+  <button id="deleteAccountBtn" class="dangerLink">Удалить аккаунт</button>
+</div></div>
+
+<div id="qrModal" class="modal hidden"><div class="modalCard small">
+  <h2>Ваш QR-код</h2>
+  <p>Отсканировав его, человек сразу добавит вас в друзья в ForceNet.</p>
+  <div class="qrBox"><img id="qrImage" alt="QR-код"></div>
+  <div class="copyRow"><input id="qrLink" readonly><button id="copyQrLink">Копировать</button></div>
+  <div class="modalActions"><button id="closeQr" class="secondaryBtn">Готово</button></div>
+</div></div>
+
+<div id="deleteAccountModal" class="modal hidden"><div class="modalCard small">
+  <h2>Удалить аккаунт?</h2>
+  <p>Это необратимо: профиль, юзернейм, список друзей и групп будут удалены. Для подтверждения введите пароль.</p>
+  <input id="deletePassword" type="password" placeholder="Пароль" autocomplete="current-password">
+  <div class="modalActions"><button id="cancelDeleteAccount" class="secondaryBtn">Отмена</button><button id="confirmDeleteAccount" class="danger">Удалить аккаунт</button></div>
+  <p id="deleteAccountStatus" class="deleteStatus"></p>
 </div></div>
 
 <div id="confirmModal" class="modal hidden"><div class="modalCard small"><h2>Удалить сообщение?</h2><p>Сообщение будет удалено у всех участников чата.</p><div class="modalActions"><button id="cancelDelete" class="secondaryBtn">Отмена</button><button id="confirmDelete" class="danger">Удалить</button></div></div></div>
@@ -40,7 +59,7 @@
 
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-import {getAuth,setPersistence,browserLocalPersistence,onAuthStateChanged,signOut,updateProfile} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+import {getAuth,setPersistence,browserLocalPersistence,onAuthStateChanged,signOut,updateProfile,deleteUser,EmailAuthProvider,reauthenticateWithCredential} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 import {getDatabase,ref,get,set,push,onValue,query,orderByChild,equalTo,update,remove,runTransaction} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
 import {createClient} from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -235,6 +254,11 @@ function startConversationUI(){
     btn.className="iconBtn"; btn.title="Пригласить"; btn.textContent="🔗";
     btn.onclick=()=>openInvite(currentOther.id,currentOther.name);
     headActions.appendChild(btn);
+  }else{
+    const btn=document.createElement("button");
+    btn.className="iconBtn"; btn.title="Очистить мои сообщения в этом чате"; btn.textContent="🧹";
+    btn.onclick=clearMyMessages;
+    headActions.appendChild(btn);
   }
   highlightActive();
 }
@@ -322,6 +346,23 @@ function startEdit(m,el){
   };
 }
 function requestDelete(m){ pendingDelete=m; $("confirmModal").classList.remove("hidden"); }
+async function clearMyMessages(){
+  if(!currentOther || currentOther.isGroup) return;
+  if(!confirm("Удалить все ваши сообщения в этом чате? Это необратимо, у собеседника они тоже исчезнут.")) return;
+  try{
+    const snap=await get(ref(db,"messages/"+currentChat));
+    if(!snap.exists()) return;
+    const removals=[];
+    snap.forEach(x=>{
+      const m=x.val();
+      if(m.senderId===myPublicId){
+        if(m.filePath) supabase.storage.from(FILE_BUCKET).remove([m.filePath]).catch(()=>{});
+        removals.push(remove(ref(db,`messages/${currentChat}/${x.key}`)));
+      }
+    });
+    await Promise.all(removals);
+  }catch(e){ console.error(e); alert("Не удалось очистить чат."); }
+}
 $("confirmDelete").onclick=async()=>{
   if(pendingDelete){
     if(pendingDelete.filePath){ try{ await supabase.storage.from(FILE_BUCKET).remove([pendingDelete.filePath]); }catch(e){ console.warn(e); } }
@@ -421,6 +462,61 @@ document.querySelectorAll(".themeChoice").forEach(b=>b.onclick=()=>{
   b.classList.add("selected"); applyTheme(b.dataset.theme);
 });
 
+/* ---------- QR-код личного контакта ---------- */
+function myContactLink(){ return `${location.origin}${location.pathname}?add=${myPublicId}`; }
+$("showQrBtn").onclick=()=>{
+  const link=myContactLink();
+  $("qrLink").value=link;
+  $("qrImage").src=`https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=${encodeURIComponent(link)}`;
+  $("qrModal").classList.remove("hidden");
+};
+$("closeQr").onclick=()=>$("qrModal").classList.add("hidden");
+$("copyQrLink").onclick=async()=>{
+  await navigator.clipboard.writeText($("qrLink").value);
+  $("copyQrLink").textContent="Скопировано"; setTimeout(()=>$("copyQrLink").textContent="Копировать",1500);
+};
+async function handleAddParam(){
+  const params=new URLSearchParams(location.search);
+  const addId=params.get("add");
+  if(!addId) return;
+  history.replaceState({},"",location.pathname);
+  if(addId===myPublicId) return;
+  const snap=await get(ref(db,"users/"+addId));
+  if(!snap.exists()){ alert("Такой пользователь не найден."); return; }
+  const u=snap.val();
+  await saveFriend(addId,u);
+  openChat(addId,u);
+}
+
+/* ---------- Удаление аккаунта ---------- */
+$("logoutSettings").onclick=()=>signOut(auth);
+$("deleteAccountBtn").onclick=()=>{
+  $("deletePassword").value=""; $("deleteAccountStatus").textContent="";
+  $("settingsModal").classList.add("hidden");
+  $("deleteAccountModal").classList.remove("hidden");
+};
+$("cancelDeleteAccount").onclick=()=>$("deleteAccountModal").classList.add("hidden");
+$("confirmDeleteAccount").onclick=async()=>{
+  const password=$("deletePassword").value;
+  if(!password) return $("deleteAccountStatus").textContent="Введите пароль для подтверждения.";
+  $("deleteAccountStatus").textContent="Удаляем…";
+  try{
+    const cred=EmailAuthProvider.credential(me.email,password);
+    await reauthenticateWithCredential(me,cred);
+    if(profile.username) await remove(ref(db,"usernames/"+normalizeUsername(profile.username))).catch(()=>{});
+    await remove(ref(db,"users/"+myPublicId)).catch(()=>{});
+    await remove(ref(db,"friends/"+myPublicId)).catch(()=>{});
+    await remove(ref(db,`userGroups/${myPublicId}`)).catch(()=>{});
+    await deleteUser(me);
+    localStorage.removeItem("forceNetPublicId");
+    localStorage.removeItem("forceNetTheme");
+    location.replace("../registration/registration.html");
+  }catch(e){
+    console.error(e);
+    $("deleteAccountStatus").textContent = (e.code==="auth/invalid-credential"||e.code==="auth/wrong-password") ? "Неверный пароль." : (e.message||"Не удалось удалить аккаунт.");
+  }
+};
+
 /* ---------- Новый групповой чат / приглашения ---------- */
 $("newGroupBtn").onclick=()=>{ $("groupName").value=""; $("groupModal").classList.remove("hidden"); $("groupName").focus(); };
 $("cancelGroup").onclick=()=>$("groupModal").classList.add("hidden");
@@ -467,6 +563,7 @@ onAuthStateChanged(auth,async user=>{
   renderGroups();
   cleanupAllChats();
   await handleJoinParam();
+  await handleAddParam();
 });
 </script>
 </body></html>
