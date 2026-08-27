@@ -98,3 +98,55 @@ body[data-theme=dark] .settingsDivider{background:#252d3b}
 .qrBox{background:#fff;border-radius:14px;padding:12px;display:flex;justify-content:center;margin:10px 0}
 .qrBox img{width:100%;max-width:240px;display:block}
 .deleteStatus{font-size:12px;color:#e5484d;min-height:16px;margin-top:8px}
+
+/* ---------- Аватар из галереи, роль, владелец, профиль, группы, админ-панель ---------- */
+.devTag{color:#1fa855;font-weight:800;font-size:11px;vertical-align:middle}
+.ownerTag{color:#1fa855;font-weight:800;font-size:11px;margin-left:auto;white-space:nowrap;padding-left:8px}
+.uidRow{font-size:11px;color:#748096;word-break:break-all;margin-top:8px}
+.uidRow.hidden{display:none}
+
+.groupInfoList{display:flex;flex-direction:column;gap:8px;max-height:50vh;overflow:auto;margin:8px 0}
+.memberRow{display:flex;align-items:center;gap:10px;padding:8px;border-radius:12px;background:#f5f7fb}
+body[data-theme=dark] .memberRow{background:#171e2a}
+.memberRow b{display:block}
+.memberRow small{display:block;color:#8993a5}
+
+.profileView{display:flex;align-items:center;gap:16px;padding:8px 0 4px}
+.profileView b{display:block;font-size:17px}
+.profileView small{display:block;color:#8993a5;margin-top:2px}
+.profileView .devTag{display:inline-block;margin-top:4px}
+
+/* Круглая зелёная кнопка админ-панели — фиксирована, видна везде поверх интерфейса */
+.adminFab{
+  position:fixed;top:14px;right:14px;z-index:60;
+  width:46px;height:46px;border-radius:50%;border:0;
+  background:#1fa855;color:#fff;font-size:20px;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 8px 24px #1fa85555;
+}
+.adminFab.hidden{display:none}
+.adminFab:hover{background:#188f48}
+@media(max-width:800px){.adminFab{top:calc(10px + env(safe-area-inset-top));right:10px;width:42px;height:42px;font-size:18px}}
+
+.adminCard{width:min(640px,100%)}
+.adminTabs{display:flex;gap:8px;margin:4px 0 14px}
+.adminTab{flex:1;border:1px solid #dfe4ec;background:#f5f7fb;color:#1b2330;border-radius:11px;padding:9px;font-weight:700}
+.adminTab.active{background:#eef1ff;border-color:#5b6cff;color:#4454df}
+body[data-theme=dark] .adminTab{background:#0f151f;border-color:#293243;color:#f4f6fb}
+body[data-theme=dark] .adminTab.active{background:#232c55;border-color:#5b6cff;color:#c3caff}
+.adminPane{max-height:60vh;overflow:auto;display:flex;flex-direction:column;gap:8px}
+.adminPane.hidden{display:none}
+.adminRow{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:10px;border-radius:12px;background:#f5f7fb}
+body[data-theme=dark] .adminRow{background:#171e2a}
+.adminRowInfo{flex:1;min-width:160px}
+.adminRowInfo small{display:block;color:#8993a5}
+.adminRowInfo small.statusLine:empty{display:none}
+.adminRowActions{display:flex;gap:6px;flex:none}
+.adminRowActions button{border:0;border-radius:9px;padding:7px 9px;font-size:13px;background:#e8ebff;color:#4454df;font-weight:700}
+body[data-theme=dark] .adminRowActions button{background:#232c55;color:#c3caff}
+.adminSub{width:100%;display:flex;flex-wrap:wrap;gap:6px;padding-top:6px;border-top:1px dashed #dfe4ec}
+.adminSub.hidden{display:none}
+body[data-theme=dark] .adminSub{border-color:#293243}
+.chip{border:1px solid #dfe4ec;background:#fff;color:#1b2330;border-radius:9px;padding:6px 9px;font-size:12px}
+body[data-theme=dark] .chip{background:#0f151f;border-color:#293243;color:#f4f6fb}
+@media(max-width:800px){.adminCard{width:100%}.adminRowActions{width:100%;justify-content:flex-start}}
