@@ -15,21 +15,30 @@
   <button id="logout" class="logout">Выйти</button>
 </aside>
 <main class="chat">
-  <header class="chatHead"><button id="backBtn" class="iconBtn mobileOnly">‹</button><div><strong id="chatTitle">Выберите чат</strong><small id="chatSub"></small></div><div class="headSpace" id="headActions"></div></header>
+  <header class="chatHead" id="chatHead"><button id="backBtn" class="iconBtn mobileOnly">‹</button><div><strong id="chatTitle">Выберите чат</strong><small id="chatSub"></small></div><div class="headSpace" id="headActions"></div></header>
   <div id="messages" class="messages"><div class="empty">Выберите друга или чат, чтобы начать общение.</div></div>
   <div id="filePreview" class="filePreview hidden"></div>
   <div class="composer"><input id="fileInput" type="file" hidden accept="image/*,video/*,audio/*,.pdf,.txt,.zip,.doc,.docx,.xls,.xlsx"><button id="attachBtn" class="attachBtn" title="Прикрепить файл">📎</button><input id="text" placeholder="Написать сообщение…" autocomplete="off"><button id="send">Отправить</button></div>
 </main>
 </div>
 
+<button id="adminFab" class="adminFab hidden" title="Админ-панель">🛡</button>
+
 <div id="settingsModal" class="modal hidden"><div class="modalCard settingsCard">
   <div class="modalHead"><h2>Настройки</h2><button id="closeSettings" class="iconBtn">×</button></div>
-  <div class="avatarSettings"><img id="avatarPreview" class="avatar avatarLarge" alt="Аватар"><div><b>Аватар</b><small>Общий для всех пользователей ForceNet — менять нельзя</small></div></div>
+  <div class="avatarSettings">
+    <img id="avatarPreview" class="avatar avatarLarge" alt="Аватар">
+    <div><b>Аватар</b><small>Загрузите фото из галереи — будет видно всем</small>
+      <input id="avatarFile" type="file" accept="image/*" hidden>
+      <button id="changeAvatarBtn" class="secondaryBtn" style="margin-top:6px;width:max-content">Изменить фото</button>
+    </div>
+  </div>
   <label>Ваш ID</label><div class="copyRow"><input id="myId" readonly><button id="copyId">Копировать</button><button id="showQrBtn" class="secondaryBtn">QR-код</button></div>
   <label>Имя</label><input id="myName">
   <label>Юзернейм</label><input id="myUsername" placeholder="латиница, цифры, _">
   <label>Тема</label><div class="themeRow"><button data-theme="light" class="themeChoice">Светлая</button><button data-theme="dark" class="themeChoice">Тёмная</button></div>
   <button id="saveSettings" class="save">Сохранить</button><p id="settingsStatus"></p>
+  <p id="uidRow" class="uidRow hidden"></p>
   <div class="settingsDivider"></div>
   <button id="logoutSettings" class="secondaryBtn" style="width:100%">Выйти из аккаунта</button>
   <button id="deleteAccountBtn" class="dangerLink">Удалить аккаунт</button>
@@ -57,6 +66,30 @@
 
 <div id="inviteModal" class="modal hidden"><div class="modalCard small"><h2>Приглашение в «<span id="inviteChatName"></span>»</h2><p>Перешлите эту ссылку — по ней сразу присоединятся к чату.</p><div class="copyRow"><input id="inviteLink" readonly><button id="copyInvite">Копировать</button></div><div class="modalActions"><button id="closeInvite" class="secondaryBtn">Готово</button></div></div></div>
 
+<div id="groupInfoModal" class="modal hidden"><div class="modalCard small">
+  <div class="modalHead"><h2 id="groupInfoTitle">Участники</h2><button id="closeGroupInfo" class="iconBtn">×</button></div>
+  <div id="groupInfoList" class="groupInfoList"></div>
+  <div class="modalActions"><button id="groupLeaveBtn" class="secondaryBtn hidden">Покинуть чат</button><button id="groupDeleteBtn" class="danger hidden">Удалить чат</button></div>
+</div></div>
+
+<div id="profileModal" class="modal hidden"><div class="modalCard small">
+  <div class="modalHead"><h2>Профиль</h2><button id="closeProfile" class="iconBtn">×</button></div>
+  <div class="profileView">
+    <img id="profileAvatar" class="avatar avatarLarge" alt="">
+    <div><b id="profileName"></b><small id="profileUsername"></small><small id="profileIdRow"></small><small id="profileRole" class="devTag hidden">developer</small></div>
+  </div>
+</div></div>
+
+<div id="adminModal" class="modal hidden"><div class="modalCard adminCard">
+  <div class="modalHead"><h2>Панель администратора</h2><button id="closeAdmin" class="iconBtn">×</button></div>
+  <div class="adminTabs">
+    <button class="adminTab active" data-tab="accounts">Аккаунты</button>
+    <button class="adminTab" data-tab="groups">Группы</button>
+  </div>
+  <div id="adminAccounts" class="adminPane"></div>
+  <div id="adminGroups" class="adminPane hidden"></div>
+</div></div>
+
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 import {getAuth,setPersistence,browserLocalPersistence,onAuthStateChanged,signOut,updateProfile,deleteUser,EmailAuthProvider,reauthenticateWithCredential} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
@@ -68,14 +101,16 @@ const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getDatabase(app); a
 const supabase=createClient("https://btssggabiwcfibijlpee.supabase.co","sb_publishable_lb3EYFwtDxk17z810Ec2Sg_of3yqAoS");
 const FILE_BUCKET="chat-files";
 const AVATAR_PATH="default-avatar.png";
+const ADMIN_EMAILS=["az99arseniy@gmail.com","arseniydrummer@gmail.com"];
 
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
-let myPublicId="",me=null,currentOther=null,currentChat="",unsub=null,profile=null,pendingDelete=null,AVATAR_URL="";
+let myPublicId="",me=null,currentOther=null,currentChat="",unsub=null,profile=null,pendingDelete=null,AVATAR_URL="",isAdmin=false,myMuteUntil=0;
 const WEEK=7*24*60*60*1000;
 const chatId=(a,b)=>[a,b].sort().join("_");
 function normalizeUsername(u){return String(u||"").trim().toLowerCase()}
 function validUsername(u){return /^[a-z0-9_]{3,20}$/.test(u)}
+function avatarFor(u){ return (u && u.avatarUrl) || AVATAR_URL; }
 async function claimUsername(lower,value){
   const r=await runTransaction(ref(db,"usernames/"+lower),cur=>cur===null?value:undefined);
   return r.committed && r.snapshot.val()===value;
@@ -89,9 +124,9 @@ async function getMyUser(uid){
 }
 async function loadProfile(user){for(let i=0;i<10;i++){const u=await getMyUser(user.uid);if(u)return u;await new Promise(r=>setTimeout(r,300));}return null}
 function applyTheme(t){document.body.dataset.theme=t||"dark";localStorage.setItem("forceNetTheme",t||"dark")}
-function renderMe(){$("me").innerHTML=`<img class="avatar" src="${AVATAR_URL}" alt=""><span><b>${esc(profile.name)}</b><small>@${esc(profile.username||"—")} · ID ${myPublicId}</small></span>`}
+function renderMe(){$("me").innerHTML=`<img class="avatar" src="${avatarFor(profile)}" alt=""><span><b>${esc(profile.name)}${profile.role==="developer"?' <span class="devTag">developer</span>':""}</b><small>@${esc(profile.username||"—")} · ID ${myPublicId}</small></span>`}
 
-/* ---------- Общий аватар в Supabase Storage (один на всех) ---------- */
+/* ---------- Общий аватар по умолчанию в Supabase Storage (пока свой не загружен) ---------- */
 async function ensureDefaultAvatar(){
   const cached=localStorage.getItem("forceNetAvatarUrl");
   if(cached) return cached;
@@ -115,6 +150,27 @@ async function ensureDefaultAvatar(){
   localStorage.setItem("forceNetAvatarUrl",pub);
   return pub;
 }
+$("changeAvatarBtn").onclick=()=>$("avatarFile").click();
+$("avatarFile").onchange=async e=>{
+  const file=e.target.files[0];
+  if(!file) return;
+  if(!file.type.startsWith("image/")){ e.target.value=""; return alert("Выберите изображение."); }
+  if(file.size>5*1024*1024){ e.target.value=""; return alert("Максимальный размер фото — 5 МБ."); }
+  $("settingsStatus").textContent="Загружаем фото…";
+  try{
+    const ext=(file.name.split(".").pop()||"jpg").replace(/[^a-zA-Z0-9]/g,"")||"jpg";
+    const path=`avatars/${myPublicId}.${ext}`;
+    const {error}=await supabase.storage.from(FILE_BUCKET).upload(path,file,{contentType:file.type,upsert:true});
+    if(error) throw error;
+    const pub=supabase.storage.from(FILE_BUCKET).getPublicUrl(path).data.publicUrl+"?t="+Date.now();
+    await update(ref(db,"users/"+myPublicId),{avatarUrl:pub});
+    profile.avatarUrl=pub;
+    $("avatarPreview").src=pub;
+    renderMe();
+    $("settingsStatus").textContent="Аватар обновлён.";
+  }catch(err){ console.error(err); $("settingsStatus").textContent="Не удалось загрузить фото. Проверьте настройки bucket chat-files в Supabase."; }
+  e.target.value="";
+};
 
 /* ---------- Друзья ---------- */
 async function saveFriend(id,u){ await set(ref(db,`friends/${myPublicId}/${id}`),{id,name:u.name||id,addedAt:Date.now()}); }
@@ -126,20 +182,22 @@ async function renameFriend(id,current){
   await update(ref(db,`friends/${myPublicId}/${id}`),{alias:trimmed});
 }
 function renderFriends(){
-  onValue(ref(db,`friends/${myPublicId}`),snap=>{
+  onValue(ref(db,`friends/${myPublicId}`),async snap=>{
     const box=$("chats"); box.innerHTML="";
     if(!snap.exists()){ box.innerHTML='<div class="emptySide">Пока нет друзей.<br>Найдите человека выше.</div>'; return; }
-    snap.forEach(x=>{
-      const f=x.val();
-      const displayName=f.alias||f.name;
+    const entries=[]; snap.forEach(x=>{entries.push([x.key,x.val()]);});
+    for(const [id,f] of entries){
+      const us=await get(ref(db,"users/"+id));
+      const liveUser=us.exists()?us.val():{name:f.name};
+      const displayName=f.alias||liveUser.name||f.name;
       const b=document.createElement("button");
-      b.className="friend "+(currentOther&&!currentOther.isGroup&&currentOther.id===x.key?"active":"");
-      b.dataset.id=x.key; b.dataset.kind="friend";
-      b.innerHTML=`<img class="avatar" src="${AVATAR_URL}" alt=""><span><b>${esc(displayName)}</b><small>ID ${x.key}${f.alias?` · ${esc(f.name)}`:""}</small></span><button class="friendRename" title="Переименовать для себя">✎</button>`;
-      b.querySelector(".friendRename").onclick=async ev=>{ ev.stopPropagation(); await renameFriend(x.key,displayName); };
-      b.onclick=()=>openChat(x.key,f);
+      b.className="friend "+(currentOther&&!currentOther.isGroup&&currentOther.id===id?"active":"");
+      b.dataset.id=id; b.dataset.kind="friend";
+      b.innerHTML=`<img class="avatar" src="${avatarFor(liveUser)}" alt=""><span><b>${esc(displayName)}</b><small>ID ${id}${f.alias?` · ${esc(liveUser.name||f.name)}`:""}</small></span><button class="friendRename" title="Переименовать для себя">✎</button>`;
+      b.querySelector(".friendRename").onclick=async ev=>{ ev.stopPropagation(); await renameFriend(id,displayName); };
+      b.onclick=()=>openChat(id,liveUser);
       box.appendChild(b);
-    });
+    }
   });
 }
 
@@ -159,6 +217,29 @@ async function joinGroup(groupId){
   const fresh=await get(ref(db,"groups/"+groupId));
   return fresh.val();
 }
+async function leaveGroup(id){
+  if(!confirm("Покинуть этот чат?")) return;
+  await remove(ref(db,`groups/${id}/members/${myPublicId}`)).catch(()=>{});
+  await remove(ref(db,`userGroups/${myPublicId}/${id}`)).catch(()=>{});
+  closeChatIfCurrentGroup(id);
+  $("groupInfoModal").classList.add("hidden");
+}
+async function deleteGroup(id){
+  if(!confirm("Удалить чат для всех участников? Это необратимо.")) return;
+  const gs=await get(ref(db,"groups/"+id));
+  if(gs.exists()){
+    const g=gs.val();
+    const memberIds=Object.keys(g.members||{});
+    await Promise.all(memberIds.map(mid=>remove(ref(db,`userGroups/${mid}/${id}`)).catch(()=>{})));
+  }
+  const msnap=await get(ref(db,"messages/g_"+id));
+  if(msnap.exists()) msnap.forEach(x=>{ const m=x.val(); if(m.filePath) supabase.storage.from(FILE_BUCKET).remove([m.filePath]).catch(()=>{}); });
+  await remove(ref(db,"messages/g_"+id)).catch(()=>{});
+  await remove(ref(db,"groups/"+id)).catch(()=>{});
+  closeChatIfCurrentGroup(id);
+  $("groupInfoModal").classList.add("hidden");
+}
+function closeChatIfCurrentGroup(id){ if(currentOther && currentOther.isGroup && currentOther.id===id) resetChatView(); }
 function renderGroups(){
   onValue(ref(db,`userGroups/${myPublicId}`),async snap=>{
     const box=$("groupChats"); box.innerHTML="";
@@ -192,6 +273,47 @@ async function handleJoinParam(){
   const g=await joinGroup(joinId);
   if(g) openGroup(joinId,g);
 }
+
+/* ---------- Информация о чате: участники группы / профиль собеседника ---------- */
+async function openGroupInfo(id){
+  const gs=await get(ref(db,"groups/"+id));
+  if(!gs.exists()) return;
+  const g=gs.val();
+  $("groupInfoTitle").textContent=g.name;
+  const memberIds=Object.keys(g.members||{});
+  const box=$("groupInfoList"); box.innerHTML="Загрузка…";
+  const rows=[];
+  for(const mid of memberIds){
+    const us=await get(ref(db,"users/"+mid));
+    const u=us.exists()?us.val():{name:mid};
+    rows.push(`<div class="memberRow"><img class="avatar" src="${avatarFor(u)}" alt=""><span><b>${esc(u.name||mid)}</b><small>ID ${mid}</small></span>${mid===g.ownerId?'<span class="ownerTag">Владелец</span>':""}</div>`);
+  }
+  box.innerHTML=rows.join("");
+  const iAmOwner=g.ownerId===myPublicId;
+  $("groupLeaveBtn").classList.toggle("hidden",iAmOwner);
+  $("groupDeleteBtn").classList.toggle("hidden",!iAmOwner);
+  $("groupLeaveBtn").onclick=()=>leaveGroup(id);
+  $("groupDeleteBtn").onclick=()=>deleteGroup(id);
+  $("groupInfoModal").classList.remove("hidden");
+}
+$("closeGroupInfo").onclick=()=>$("groupInfoModal").classList.add("hidden");
+async function openProfileView(id){
+  const us=await get(ref(db,"users/"+id));
+  if(!us.exists()) return;
+  const u=us.val();
+  $("profileAvatar").src=avatarFor(u);
+  $("profileName").textContent=u.name||id;
+  $("profileUsername").textContent=u.username?`@${u.username}`:"";
+  $("profileIdRow").textContent=`ID ${id}`;
+  $("profileRole").classList.toggle("hidden", u.role!=="developer");
+  $("profileModal").classList.remove("hidden");
+}
+$("closeProfile").onclick=()=>$("profileModal").classList.add("hidden");
+$("chatHead").addEventListener("click",e=>{
+  if(e.target.closest("#backBtn") || e.target.closest("#headActions") || !currentOther) return;
+  if(currentOther.isGroup) openGroupInfo(currentOther.id);
+  else openProfileView(currentOther.id);
+});
 
 /* ---------- Поиск (по ID, юзернейму или имени) ---------- */
 async function findUser(){
@@ -230,26 +352,41 @@ async function findUser(){
     if(seen.has(id)) return; seen.add(id);
     const d=document.createElement("div");
     d.className="result";
-    d.innerHTML=`<img class="avatar" src="${AVATAR_URL}" alt=""><span class="resultInfo"><b>${esc(u.name)}</b><small>${u.username?`@${esc(u.username)} · `:""}ID ${id}</small></span><button>＋ Друг</button>`;
+    d.innerHTML=`<img class="avatar" src="${avatarFor(u)}" alt=""><span class="resultInfo"><b>${esc(u.name)}</b><small>${u.username?`@${esc(u.username)} · `:""}ID ${id}</small></span><button>＋ Друг</button>`;
     d.querySelector("button").onclick=async()=>{ await saveFriend(id,u); openChat(id,u); };
     $("searchResult").appendChild(d);
   });
 }
 
-/* ---------- Открытие чата (личного или группового) ---------- */
+/* ---------- Открытие чата (личного, группового, или в режиме администратора) ---------- */
 function highlightActive(){
   document.querySelectorAll(".friend").forEach(b=>{
     const isGroup=b.dataset.kind==="group";
     b.classList.toggle("active", !!currentOther && currentOther.isGroup===isGroup && currentOther.id===b.dataset.id);
   });
 }
+function resetChatView(){
+  currentOther=null; currentChat=""; if(unsub) unsub();
+  $("chatTitle").textContent="Выберите чат"; $("chatSub").textContent="";
+  $("messages").innerHTML='<div class="empty">Выберите друга или чат, чтобы начать общение.</div>';
+  document.body.classList.remove("chatOpen");
+  $("headActions").innerHTML="";
+  document.querySelector(".composer").style.display="flex";
+  highlightActive();
+}
 function startConversationUI(){
   $("chatTitle").textContent=currentOther.name;
   $("chatSub").textContent=currentOther.isGroup?`Групповой чат`:`ID ${currentOther.id}`;
   $("messages").innerHTML='<div class="empty">Загрузка…</div>';
   document.body.classList.add("chatOpen");
+  document.querySelector(".composer").style.display=currentOther.adminView?"none":"flex";
   const headActions=$("headActions"); headActions.innerHTML="";
-  if(currentOther.isGroup){
+  if(currentOther.adminView){
+    const btn=document.createElement("button");
+    btn.className="iconBtn"; btn.title="Вернуться в админ-панель"; btn.textContent="🛡";
+    btn.onclick=()=>{ resetChatView(); $("adminModal").classList.remove("hidden"); };
+    headActions.appendChild(btn);
+  }else if(currentOther.isGroup){
     const btn=document.createElement("button");
     btn.className="iconBtn"; btn.title="Пригласить"; btn.textContent="🔗";
     btn.onclick=()=>openInvite(currentOther.id,currentOther.name);
@@ -273,6 +410,20 @@ function openGroup(id,g){
   currentChat="g_"+id;
   startConversationUI();
   subscribeMessages();
+}
+function openAdminChat(accountId,friendId){
+  currentOther={id:friendId,name:`Просмотр: ${accountId} ↔ ${friendId}`,isGroup:false,adminView:true};
+  currentChat=chatId(accountId,friendId);
+  startConversationUI();
+  subscribeMessages();
+  $("adminModal").classList.add("hidden");
+}
+function openAdminGroup(id,name){
+  currentOther={id,name,isGroup:true,adminView:true};
+  currentChat="g_"+id;
+  startConversationUI();
+  subscribeMessages();
+  $("adminModal").classList.add("hidden");
 }
 
 /* ---------- Сообщения ---------- */
@@ -317,9 +468,10 @@ function renderMessage(m,existingEl){
   }
   const time=new Date(m.createdAt||0).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
   let actions="";
-  if(mine) actions=`<div class="msgActions">${m.fileUrl?"":'<button class="editBtn" title="Изменить">✎</button>'}<button class="delBtn" title="Удалить">🗑</button></div>`;
+  const canModerate=mine||isAdmin;
+  if(canModerate) actions=`<div class="msgActions">${m.fileUrl?"":'<button class="editBtn" title="Изменить">✎</button>'}<button class="delBtn" title="Удалить">🗑</button></div>`;
   el.innerHTML=`${body}<div class="msgMeta"><span>${time}${m.edited?" · изменено":""}</span></div>${actions}`;
-  if(mine){
+  if(canModerate){
     const editBtn=el.querySelector(".editBtn");
     if(editBtn) editBtn.onclick=()=>startEdit(m,el);
     el.querySelector(".delBtn").onclick=()=>requestDelete(m);
@@ -381,7 +533,8 @@ async function uploadFile(file,messageId){
   return {url:supabase.storage.from(FILE_BUCKET).getPublicUrl(path).data.publicUrl,path};
 }
 async function send(){
-  if(!currentOther) return alert("Сначала выберите чат.");
+  if(!currentOther || currentOther.adminView) return;
+  if(myMuteUntil>Date.now()) return alert("Вы не можете отправлять сообщения до "+new Date(myMuteUntil).toLocaleString());
   const text=$("text").value.trim(), file=$("fileInput").files[0];
   if(!text && !file) return;
   const msgRef=push(ref(db,"messages/"+currentChat));
@@ -423,14 +576,26 @@ async function cleanupAllChats(){
   }catch(e){ console.warn("Ошибка фоновой очистки",e); }
 }
 
+/* ---------- Бан / мьют (проверка для себя, в реальном времени) ---------- */
+function watchMyModeration(){
+  onValue(ref(db,"bans/"+myPublicId),snap=>{
+    if(snap.exists() && snap.val().until>Date.now()){
+      alert("Ваш аккаунт заблокирован администратором до "+new Date(snap.val().until).toLocaleString()+(snap.val().reason?"\nПричина: "+snap.val().reason:""));
+      signOut(auth);
+    }
+  });
+  onValue(ref(db,"mutes/"+myPublicId),snap=>{ myMuteUntil = (snap.exists() && snap.val().until) || 0; });
+}
+
 /* ---------- Настройки ---------- */
 $("settingsBtn").onclick=()=>{
   $("myId").value=myPublicId;
   $("myName").value=profile.name||"";
   $("myUsername").value=profile.username||"";
-  $("avatarPreview").src=AVATAR_URL;
+  $("avatarPreview").src=avatarFor(profile);
   document.querySelectorAll(".themeChoice").forEach(b=>b.classList.toggle("selected",b.dataset.theme===(document.body.dataset.theme||"dark")));
   $("settingsStatus").textContent="";
+  if(isAdmin){ $("uidRow").textContent="UID для /admins в Firebase: "+me.uid; $("uidRow").classList.remove("hidden"); }
   $("settingsModal").classList.remove("hidden");
 };
 $("closeSettings").onclick=()=>$("settingsModal").classList.add("hidden");
@@ -535,6 +700,118 @@ $("copyInvite").onclick=async()=>{
   $("copyInvite").textContent="Скопировано"; setTimeout(()=>$("copyInvite").textContent="Копировать",1500);
 };
 
+/* ---------- Панель администратора ---------- */
+$("adminFab").onclick=()=>{ $("adminModal").classList.remove("hidden"); loadAdminAccounts(); };
+$("closeAdmin").onclick=()=>$("adminModal").classList.add("hidden");
+document.querySelectorAll(".adminTab").forEach(t=>t.onclick=()=>{
+  document.querySelectorAll(".adminTab").forEach(x=>x.classList.remove("active"));
+  t.classList.add("active");
+  $("adminAccounts").classList.toggle("hidden",t.dataset.tab!=="accounts");
+  $("adminGroups").classList.toggle("hidden",t.dataset.tab!=="groups");
+  if(t.dataset.tab==="groups") loadAdminGroups(); else loadAdminAccounts();
+});
+async function loadAdminAccounts(){
+  const box=$("adminAccounts"); box.innerHTML="Загрузка…";
+  const [usersSnap,bansSnap,mutesSnap]=await Promise.all([get(ref(db,"users")),get(ref(db,"bans")),get(ref(db,"mutes"))]);
+  const bans={}; bansSnap.forEach(x=>{bans[x.key]=x.val();});
+  const mutes={}; mutesSnap.forEach(x=>{mutes[x.key]=x.val();});
+  const rows=[];
+  usersSnap.forEach(x=>{
+    const id=x.key, u=x.val();
+    const ban=bans[id], mute=mutes[id];
+    const banned=ban && ban.until>Date.now();
+    const muted=mute && mute.until>Date.now();
+    rows.push(`<div class="adminRow" data-id="${id}">
+      <img class="avatar" src="${avatarFor(u)}" alt="">
+      <div class="adminRowInfo"><b>${esc(u.name||id)}${u.role==="developer"?' <span class="devTag">developer</span>':""}</b>
+        <small>@${esc(u.username||"—")} · ID ${id}</small>
+        <small class="statusLine">${banned?`🚫 забанен до ${new Date(ban.until).toLocaleString()}`:""}${muted?` 🔇 замьючен до ${new Date(mute.until).toLocaleString()}`:""}</small>
+      </div>
+      <div class="adminRowActions">
+        <button class="chatsBtn" title="Переписки">💬</button>
+        <button class="banBtn" title="${banned?"Разбанить":"Забанить"}">${banned?"✅":"🚫"}</button>
+        <button class="muteBtn" title="${muted?"Размьютить":"Замьютить"}">${muted?"🔊":"🔇"}</button>
+        <button class="delBtn" title="Удалить">🗑</button>
+      </div>
+      <div class="adminSub hidden"></div>
+    </div>`);
+  });
+  box.innerHTML=rows.join("")||'<div class="emptySide">Нет пользователей.</div>';
+  box.querySelectorAll(".adminRow").forEach(row=>{
+    const id=row.dataset.id;
+    row.querySelector(".banBtn").onclick=()=>toggleBan(id);
+    row.querySelector(".muteBtn").onclick=()=>toggleMute(id);
+    row.querySelector(".delBtn").onclick=()=>adminDeleteAccount(id);
+    row.querySelector(".chatsBtn").onclick=()=>toggleAdminChats(id,row);
+  });
+}
+async function toggleBan(id){
+  const banSnap=await get(ref(db,"bans/"+id));
+  if(banSnap.exists() && banSnap.val().until>Date.now()){
+    if(!confirm("Снять бан?")) return;
+    await remove(ref(db,"bans/"+id));
+  }else{
+    const days=Number(prompt("На сколько дней забанить?","7"));
+    if(!days || days<=0) return;
+    await set(ref(db,"bans/"+id),{until:Date.now()+days*86400000,bannedAt:Date.now(),bannedBy:myPublicId});
+  }
+  loadAdminAccounts();
+}
+async function toggleMute(id){
+  const muteSnap=await get(ref(db,"mutes/"+id));
+  if(muteSnap.exists() && muteSnap.val().until>Date.now()){
+    if(!confirm("Снять мьют?")) return;
+    await remove(ref(db,"mutes/"+id));
+  }else{
+    const days=Number(prompt("На сколько дней замьютить?","1"));
+    if(!days || days<=0) return;
+    await set(ref(db,"mutes/"+id),{until:Date.now()+days*86400000,mutedAt:Date.now(),mutedBy:myPublicId});
+  }
+  loadAdminAccounts();
+}
+async function adminDeleteAccount(id){
+  if(!confirm("Удалить профиль этого аккаунта из базы? Саму запись входа Firebase Auth так удалить нельзя — см. пояснение про Cloud Function.")) return;
+  const us=await get(ref(db,"users/"+id));
+  if(us.exists() && us.val().username) await remove(ref(db,"usernames/"+normalizeUsername(us.val().username))).catch(()=>{});
+  await remove(ref(db,"users/"+id)).catch(()=>{});
+  await remove(ref(db,"friends/"+id)).catch(()=>{});
+  await remove(ref(db,"userGroups/"+id)).catch(()=>{});
+  loadAdminAccounts();
+}
+async function toggleAdminChats(id,row){
+  const sub=row.querySelector(".adminSub");
+  if(!sub.classList.contains("hidden")){ sub.classList.add("hidden"); sub.innerHTML=""; return; }
+  const fs=await get(ref(db,"friends/"+id));
+  if(!fs.exists()){ sub.innerHTML='<div class="emptySide">Нет диалогов.</div>'; sub.classList.remove("hidden"); return; }
+  const chips=[]; fs.forEach(x=>{ chips.push(`<button class="chip" data-friend="${x.key}">${esc(x.val().name||x.key)} (${x.key})</button>`); });
+  sub.innerHTML=chips.join("");
+  sub.querySelectorAll(".chip").forEach(c=>c.onclick=()=>openAdminChat(id,c.dataset.friend));
+  sub.classList.remove("hidden");
+}
+async function loadAdminGroups(){
+  const box=$("adminGroups"); box.innerHTML="Загрузка…";
+  const gs=await get(ref(db,"groups"));
+  if(!gs.exists()){ box.innerHTML='<div class="emptySide">Групп ещё не создавали.</div>'; return; }
+  const entries=[]; gs.forEach(x=>{entries.push([x.key,x.val()]);});
+  const rows=[];
+  for(const [id,g] of entries){
+    const count=g.members?Object.keys(g.members).length:0;
+    const os=await get(ref(db,"users/"+g.ownerId));
+    const ownerName=os.exists()?os.val().name:g.ownerId;
+    rows.push(`<div class="adminRow" data-id="${id}" data-name="${esc(g.name)}">
+      <span class="avatar groupAvatar">#</span>
+      <div class="adminRowInfo"><b>${esc(g.name)}</b><small>Владелец: ${esc(ownerName)} · ${count} участ. · ${new Date(g.createdAt||0).toLocaleDateString()}</small></div>
+      <div class="adminRowActions"><button class="openGroupBtn" title="Открыть">👁</button><button class="delGroupBtn" title="Удалить">🗑</button></div>
+    </div>`);
+  }
+  box.innerHTML=rows.join("");
+  box.querySelectorAll(".adminRow").forEach(row=>{
+    const id=row.dataset.id, name=row.dataset.name;
+    row.querySelector(".openGroupBtn").onclick=()=>openAdminGroup(id,name);
+    row.querySelector(".delGroupBtn").onclick=async()=>{ await deleteGroup(id); loadAdminGroups(); };
+  });
+}
+
 /* ---------- Прочие обработчики ---------- */
 $("attachBtn").onclick=()=>{ if(!currentOther) return alert("Сначала выберите чат."); $("fileInput").click(); };
 $("fileInput").onchange=e=>{
@@ -558,10 +835,16 @@ onAuthStateChanged(auth,async user=>{
   localStorage.setItem("forceNetPublicId",myPublicId);
   applyTheme(profile.theme||localStorage.getItem("forceNetTheme")||"dark");
   AVATAR_URL=await ensureDefaultAvatar();
+  isAdmin=ADMIN_EMAILS.includes((user.email||"").toLowerCase());
+  if(isAdmin){
+    $("adminFab").classList.remove("hidden");
+    if(profile.role!=="developer"){ update(ref(db,"users/"+myPublicId),{role:"developer"}).catch(()=>{}); profile.role="developer"; }
+  }
   renderMe();
   renderFriends();
   renderGroups();
   cleanupAllChats();
+  watchMyModeration();
   await handleJoinParam();
   await handleAddParam();
 });
