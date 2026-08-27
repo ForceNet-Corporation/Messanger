@@ -117,16 +117,17 @@ body[data-theme=dark] .memberRow{background:#171e2a}
 .profileView .devTag{display:inline-block;margin-top:4px}
 
 /* Круглая зелёная кнопка админ-панели — фиксирована, видна везде поверх интерфейса */
+.topActions{display:flex;align-items:center;gap:3px}
 .adminFab{
-  position:fixed;top:14px;right:14px;z-index:60;
-  width:46px;height:46px;border-radius:50%;border:0;
-  background:#1fa855;color:#fff;font-size:20px;
+  position:static;z-index:auto;
+  width:32px;height:32px;border-radius:9px;border:0;
+  background:#1fa855;color:#fff;font-size:14px;
   display:flex;align-items:center;justify-content:center;
-  box-shadow:0 8px 24px #1fa85555;
+  box-shadow:none;padding:0;
 }
 .adminFab.hidden{display:none}
 .adminFab:hover{background:#188f48}
-@media(max-width:800px){.adminFab{top:calc(10px + env(safe-area-inset-top));right:10px;width:42px;height:42px;font-size:18px}}
+@media(max-width:800px){.topActions{gap:1px}.adminFab{width:30px;height:30px;border-radius:8px;font-size:13px}}
 
 .adminCard{width:min(640px,100%)}
 .adminTabs{display:flex;gap:8px;margin:4px 0 14px}
