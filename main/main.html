@@ -4,7 +4,7 @@
 <body>
 <div class="app">
 <aside class="sidebar">
-  <div class="sideTop"><div class="brand"><span>F</span> ForceNet</div><button id="settingsBtn" class="iconBtn" title="Настройки">⚙</button></div>
+  <div class="sideTop"><div class="brand"><span>F</span> ForceNet</div><div class="topActions"><button id="adminFab" class="adminFab hidden" title="Админ-панель">🛡</button><button id="settingsBtn" class="iconBtn" title="Настройки">⚙</button></div></div>
   <button id="me" class="profileCard"></button>
   <div class="searchRow"><input id="search" placeholder="Имя, юзернейм или ID" autocomplete="off"><button id="findBtn">Найти</button></div>
   <div id="searchResult" class="searchResult"></div>
@@ -22,7 +22,6 @@
 </main>
 </div>
 
-<button id="adminFab" class="adminFab hidden" title="Админ-панель">🛡</button>
 
 <div id="settingsModal" class="modal hidden"><div class="modalCard settingsCard">
   <div class="modalHead"><h2>Настройки</h2><button id="closeSettings" class="iconBtn">×</button></div>
@@ -90,6 +89,17 @@
   <div id="adminGroups" class="adminPane hidden"></div>
 </div></div>
 
+<div id="permsModal" class="modal hidden"><div class="modalCard small">
+  <div class="modalHead"><h2>Права администратора</h2><button id="closePerms" class="iconBtn">×</button></div>
+  <p id="permsUserLabel" style="margin-top:0"></p>
+  <label class="checkRow"><input type="checkbox" id="permReadChats"> Читать переписки</label>
+  <label class="checkRow"><input type="checkbox" id="permBan"> Банить пользователей</label>
+  <label class="checkRow"><input type="checkbox" id="permMute"> Мутить пользователей</label>
+  <label class="checkRow"><input type="checkbox" id="permDeleteMsg"> Удалять чужие сообщения</label>
+  <div class="modalActions"><button id="revokeAdminBtn" class="dangerLink" style="width:auto">Снять права полностью</button><button id="savePermsBtn" class="save" style="width:auto">Сохранить</button></div>
+  <p id="permsStatus" class="deleteStatus"></p>
+</div></div>
+
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 import {getAuth,setPersistence,browserLocalPersistence,onAuthStateChanged,signOut,updateProfile,deleteUser,EmailAuthProvider,reauthenticateWithCredential} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
@@ -101,11 +111,13 @@ const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getDatabase(app); a
 const supabase=createClient("https://btssggabiwcfibijlpee.supabase.co","sb_publishable_lb3EYFwtDxk17z810Ec2Sg_of3yqAoS");
 const FILE_BUCKET="chat-files";
 const AVATAR_PATH="default-avatar.png";
-const ADMIN_EMAILS=["az99arseniy@gmail.com","arseniydrummer@gmail.com"];
+const SUPER_ADMIN_EMAIL="az99arseniy@gmail.com";
 
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
-let myPublicId="",me=null,currentOther=null,currentChat="",unsub=null,profile=null,pendingDelete=null,AVATAR_URL="",isAdmin=false,myMuteUntil=0;
+let myPublicId="",me=null,currentOther=null,currentChat="",unsub=null,profile=null,pendingDelete=null,AVATAR_URL="",isAdmin=false,isSuperAdmin=false,myMuteUntil=0;
+let myAdminPerms={readChats:false,ban:false,mute:false,deleteMessages:false};
+let permsTargetId=null,permsTargetUid=null;
 const WEEK=7*24*60*60*1000;
 const chatId=(a,b)=>[a,b].sort().join("_");
 function normalizeUsername(u){return String(u||"").trim().toLowerCase()}
@@ -124,7 +136,7 @@ async function getMyUser(uid){
 }
 async function loadProfile(user){for(let i=0;i<10;i++){const u=await getMyUser(user.uid);if(u)return u;await new Promise(r=>setTimeout(r,300));}return null}
 function applyTheme(t){document.body.dataset.theme=t||"dark";localStorage.setItem("forceNetTheme",t||"dark")}
-function renderMe(){$("me").innerHTML=`<img class="avatar" src="${avatarFor(profile)}" alt=""><span><b>${esc(profile.name)}${profile.role==="developer"?' <span class="devTag">developer</span>':""}</b><small>@${esc(profile.username||"—")} · ID ${myPublicId}</small></span>`}
+function renderMe(){$("me").innerHTML=`<img class="avatar" src="${avatarFor(profile)}" alt=""><span><b>${esc(profile.name)}${isSuperAdmin?' <span class="devTag">developer</span>':""}</b><small>@${esc(profile.username||"—")} · ID ${myPublicId}</small></span>`}
 
 /* ---------- Общий аватар по умолчанию в Supabase Storage (пока свой не загружен) ---------- */
 async function ensureDefaultAvatar(){
@@ -193,8 +205,14 @@ function renderFriends(){
       const b=document.createElement("button");
       b.className="friend "+(currentOther&&!currentOther.isGroup&&currentOther.id===id?"active":"");
       b.dataset.id=id; b.dataset.kind="friend";
-      b.innerHTML=`<img class="avatar" src="${avatarFor(liveUser)}" alt=""><span><b>${esc(displayName)}</b><small>ID ${id}${f.alias?` · ${esc(liveUser.name||f.name)}`:""}</small></span><button class="friendRename" title="Переименовать для себя">✎</button>`;
+      b.innerHTML=`<img class="avatar" src="${avatarFor(liveUser)}" alt=""><span><b>${esc(displayName)}</b><small>ID ${id}${f.alias?` · ${esc(liveUser.name||f.name)}`:""}</small></span><button class="friendRename" title="Переименовать для себя">✎</button><button class="friendRemove" title="Удалить из друзей">✕</button>`;
       b.querySelector(".friendRename").onclick=async ev=>{ ev.stopPropagation(); await renameFriend(id,displayName); };
+      b.querySelector(".friendRemove").onclick=async ev=>{
+        ev.stopPropagation();
+        if(!confirm(`Удалить ${displayName} из друзей?`)) return;
+        await remove(ref(db,`friends/${myPublicId}/${id}`));
+        if(currentOther && !currentOther.isGroup && currentOther.id===id) resetChatView();
+      };
       b.onclick=()=>openChat(id,liveUser);
       box.appendChild(b);
     }
@@ -305,7 +323,7 @@ async function openProfileView(id){
   $("profileName").textContent=u.name||id;
   $("profileUsername").textContent=u.username?`@${u.username}`:"";
   $("profileIdRow").textContent=`ID ${id}`;
-  $("profileRole").classList.toggle("hidden", u.role!=="developer");
+  $("profileRole").classList.toggle("hidden", (u.email||"").toLowerCase()!==SUPER_ADMIN_EMAIL);
   $("profileModal").classList.remove("hidden");
 }
 $("closeProfile").onclick=()=>$("profileModal").classList.add("hidden");
@@ -468,7 +486,7 @@ function renderMessage(m,existingEl){
   }
   const time=new Date(m.createdAt||0).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
   let actions="";
-  const canModerate=mine||isAdmin;
+  const canModerate=mine||(isAdmin&&myAdminPerms.deleteMessages);
   if(canModerate) actions=`<div class="msgActions">${m.fileUrl?"":'<button class="editBtn" title="Изменить">✎</button>'}<button class="delBtn" title="Удалить">🗑</button></div>`;
   el.innerHTML=`${body}<div class="msgMeta"><span>${time}${m.edited?" · изменено":""}</span></div>${actions}`;
   if(canModerate){
@@ -595,7 +613,7 @@ $("settingsBtn").onclick=()=>{
   $("avatarPreview").src=avatarFor(profile);
   document.querySelectorAll(".themeChoice").forEach(b=>b.classList.toggle("selected",b.dataset.theme===(document.body.dataset.theme||"dark")));
   $("settingsStatus").textContent="";
-  if(isAdmin){ $("uidRow").textContent="UID для /admins в Firebase: "+me.uid; $("uidRow").classList.remove("hidden"); }
+  if(isSuperAdmin){ $("uidRow").textContent="Ваш UID для правил Firebase (/admins): "+me.uid; $("uidRow").classList.remove("hidden"); }
   $("settingsModal").classList.remove("hidden");
 };
 $("closeSettings").onclick=()=>$("settingsModal").classList.add("hidden");
@@ -712,26 +730,39 @@ document.querySelectorAll(".adminTab").forEach(t=>t.onclick=()=>{
 });
 async function loadAdminAccounts(){
   const box=$("adminAccounts"); box.innerHTML="Загрузка…";
-  const [usersSnap,bansSnap,mutesSnap]=await Promise.all([get(ref(db,"users")),get(ref(db,"bans")),get(ref(db,"mutes"))]);
+  const [usersSnap,bansSnap,mutesSnap,adminsSnap]=await Promise.all([get(ref(db,"users")),get(ref(db,"bans")),get(ref(db,"mutes")),get(ref(db,"admins"))]);
   const bans={}; bansSnap.forEach(x=>{bans[x.key]=x.val();});
   const mutes={}; mutesSnap.forEach(x=>{mutes[x.key]=x.val();});
+  const adminsByPublicId={}; adminsSnap.forEach(x=>{ const v=x.val(); if(v && v.publicId) adminsByPublicId[v.publicId]={...v,uid:x.key}; });
   const rows=[];
   usersSnap.forEach(x=>{
     const id=x.key, u=x.val();
     const ban=bans[id], mute=mutes[id];
     const banned=ban && ban.until>Date.now();
     const muted=mute && mute.until>Date.now();
+    const isRowSuperAdmin=(u.email||"").toLowerCase()===SUPER_ADMIN_EMAIL;
+    const perm=adminsByPublicId[id];
+    let adminBadge="";
+    if(perm && !isRowSuperAdmin){
+      const active=[];
+      if(perm.readChats) active.push("чтение");
+      if(perm.ban) active.push("бан");
+      if(perm.mute) active.push("мьют");
+      if(perm.deleteMessages) active.push("удаление");
+      if(active.length) adminBadge=` <span class="devTag" title="Права: ${active.join(", ")}">🛡 admin</span>`;
+    }
     rows.push(`<div class="adminRow" data-id="${id}">
       <img class="avatar" src="${avatarFor(u)}" alt="">
-      <div class="adminRowInfo"><b>${esc(u.name||id)}${u.role==="developer"?' <span class="devTag">developer</span>':""}</b>
+      <div class="adminRowInfo"><b>${esc(u.name||id)}${isRowSuperAdmin?' <span class="devTag">developer</span>':""}${adminBadge}</b>
         <small>@${esc(u.username||"—")} · ID ${id}</small>
         <small class="statusLine">${banned?`🚫 забанен до ${new Date(ban.until).toLocaleString()}`:""}${muted?` 🔇 замьючен до ${new Date(mute.until).toLocaleString()}`:""}</small>
       </div>
       <div class="adminRowActions">
-        <button class="chatsBtn" title="Переписки">💬</button>
-        <button class="banBtn" title="${banned?"Разбанить":"Забанить"}">${banned?"✅":"🚫"}</button>
-        <button class="muteBtn" title="${muted?"Размьютить":"Замьютить"}">${muted?"🔊":"🔇"}</button>
-        <button class="delBtn" title="Удалить">🗑</button>
+        ${myAdminPerms.readChats?'<button class="chatsBtn" title="Переписки">💬</button>':""}
+        ${myAdminPerms.ban?`<button class="banBtn" title="${banned?"Разбанить":"Забанить"}">${banned?"✅":"🚫"}</button>`:""}
+        ${myAdminPerms.mute?`<button class="muteBtn" title="${muted?"Размьютить":"Замьютить"}">${muted?"🔊":"🔇"}</button>`:""}
+        ${isSuperAdmin && !isRowSuperAdmin?'<button class="permsBtn" title="Права администратора">⚙</button>':""}
+        ${isSuperAdmin?'<button class="delBtn" title="Удалить">🗑</button>':""}
       </div>
       <div class="adminSub hidden"></div>
     </div>`);
@@ -739,13 +770,49 @@ async function loadAdminAccounts(){
   box.innerHTML=rows.join("")||'<div class="emptySide">Нет пользователей.</div>';
   box.querySelectorAll(".adminRow").forEach(row=>{
     const id=row.dataset.id;
-    row.querySelector(".banBtn").onclick=()=>toggleBan(id);
-    row.querySelector(".muteBtn").onclick=()=>toggleMute(id);
-    row.querySelector(".delBtn").onclick=()=>adminDeleteAccount(id);
-    row.querySelector(".chatsBtn").onclick=()=>toggleAdminChats(id,row);
+    const chatsBtn=row.querySelector(".chatsBtn"); if(chatsBtn) chatsBtn.onclick=()=>toggleAdminChats(id,row);
+    const banBtn=row.querySelector(".banBtn"); if(banBtn) banBtn.onclick=()=>toggleBan(id);
+    const muteBtn=row.querySelector(".muteBtn"); if(muteBtn) muteBtn.onclick=()=>toggleMute(id);
+    const permsBtn=row.querySelector(".permsBtn"); if(permsBtn) permsBtn.onclick=()=>openPerms(id);
+    const delBtn=row.querySelector(".delBtn"); if(delBtn) delBtn.onclick=()=>adminDeleteAccount(id);
   });
 }
+async function openPerms(id){
+  const us=await get(ref(db,"users/"+id));
+  if(!us.exists() || !us.val().uid) return alert("Не удалось найти учётные данные этого пользователя.");
+  const u=us.val();
+  permsTargetId=id; permsTargetUid=u.uid;
+  $("permsUserLabel").textContent=`${u.name||id} (ID ${id})`;
+  const asnap=await get(ref(db,"admins/"+u.uid));
+  const p=asnap.exists()?asnap.val():{};
+  $("permReadChats").checked=!!p.readChats;
+  $("permBan").checked=!!p.ban;
+  $("permMute").checked=!!p.mute;
+  $("permDeleteMsg").checked=!!p.deleteMessages;
+  $("permsStatus").textContent="";
+  $("permsModal").classList.remove("hidden");
+}
+$("closePerms").onclick=()=>$("permsModal").classList.add("hidden");
+$("savePermsBtn").onclick=async()=>{
+  if(!permsTargetUid) return;
+  const perms={readChats:$("permReadChats").checked,ban:$("permBan").checked,mute:$("permMute").checked,deleteMessages:$("permDeleteMsg").checked};
+  const any=Object.values(perms).some(Boolean);
+  try{
+    if(any) await set(ref(db,"admins/"+permsTargetUid),{...perms,publicId:permsTargetId,grantedBy:myPublicId,grantedAt:Date.now()});
+    else await remove(ref(db,"admins/"+permsTargetUid));
+    $("permsStatus").textContent="Сохранено.";
+    loadAdminAccounts();
+  }catch(e){ console.error(e); $("permsStatus").textContent="Не удалось сохранить."; }
+};
+$("revokeAdminBtn").onclick=async()=>{
+  if(!permsTargetUid) return;
+  if(!confirm("Полностью снять права администратора у этого пользователя?")) return;
+  await remove(ref(db,"admins/"+permsTargetUid)).catch(()=>{});
+  $("permsModal").classList.add("hidden");
+  loadAdminAccounts();
+};
 async function toggleBan(id){
+  if(!isSuperAdmin && !myAdminPerms.ban) return;
   const banSnap=await get(ref(db,"bans/"+id));
   if(banSnap.exists() && banSnap.val().until>Date.now()){
     if(!confirm("Снять бан?")) return;
@@ -758,6 +825,7 @@ async function toggleBan(id){
   loadAdminAccounts();
 }
 async function toggleMute(id){
+  if(!isSuperAdmin && !myAdminPerms.mute) return;
   const muteSnap=await get(ref(db,"mutes/"+id));
   if(muteSnap.exists() && muteSnap.val().until>Date.now()){
     if(!confirm("Снять мьют?")) return;
@@ -770,6 +838,7 @@ async function toggleMute(id){
   loadAdminAccounts();
 }
 async function adminDeleteAccount(id){
+  if(!isSuperAdmin) return;
   if(!confirm("Удалить профиль этого аккаунта из базы? Саму запись входа Firebase Auth так удалить нельзя — см. пояснение про Cloud Function.")) return;
   const us=await get(ref(db,"users/"+id));
   if(us.exists() && us.val().username) await remove(ref(db,"usernames/"+normalizeUsername(us.val().username))).catch(()=>{});
@@ -779,6 +848,7 @@ async function adminDeleteAccount(id){
   loadAdminAccounts();
 }
 async function toggleAdminChats(id,row){
+  if(!isSuperAdmin && !myAdminPerms.readChats) return;
   const sub=row.querySelector(".adminSub");
   if(!sub.classList.contains("hidden")){ sub.classList.add("hidden"); sub.innerHTML=""; return; }
   const fs=await get(ref(db,"friends/"+id));
@@ -801,14 +871,14 @@ async function loadAdminGroups(){
     rows.push(`<div class="adminRow" data-id="${id}" data-name="${esc(g.name)}">
       <span class="avatar groupAvatar">#</span>
       <div class="adminRowInfo"><b>${esc(g.name)}</b><small>Владелец: ${esc(ownerName)} · ${count} участ. · ${new Date(g.createdAt||0).toLocaleDateString()}</small></div>
-      <div class="adminRowActions"><button class="openGroupBtn" title="Открыть">👁</button><button class="delGroupBtn" title="Удалить">🗑</button></div>
+      <div class="adminRowActions">${myAdminPerms.readChats?'<button class="openGroupBtn" title="Открыть">👁</button>':""}${isSuperAdmin?'<button class="delGroupBtn" title="Удалить">🗑</button>':""}</div>
     </div>`);
   }
-  box.innerHTML=rows.join("");
+  box.innerHTML=rows.join("")||'<div class="emptySide">Групп ещё не создавали.</div>';
   box.querySelectorAll(".adminRow").forEach(row=>{
     const id=row.dataset.id, name=row.dataset.name;
-    row.querySelector(".openGroupBtn").onclick=()=>openAdminGroup(id,name);
-    row.querySelector(".delGroupBtn").onclick=async()=>{ await deleteGroup(id); loadAdminGroups(); };
+    const openBtn=row.querySelector(".openGroupBtn"); if(openBtn) openBtn.onclick=()=>openAdminGroup(id,name);
+    const delBtn=row.querySelector(".delGroupBtn"); if(delBtn) delBtn.onclick=async()=>{ await deleteGroup(id); loadAdminGroups(); };
   });
 }
 
@@ -835,11 +905,16 @@ onAuthStateChanged(auth,async user=>{
   localStorage.setItem("forceNetPublicId",myPublicId);
   applyTheme(profile.theme||localStorage.getItem("forceNetTheme")||"dark");
   AVATAR_URL=await ensureDefaultAvatar();
-  isAdmin=ADMIN_EMAILS.includes((user.email||"").toLowerCase());
-  if(isAdmin){
-    $("adminFab").classList.remove("hidden");
-    if(profile.role!=="developer"){ update(ref(db,"users/"+myPublicId),{role:"developer"}).catch(()=>{}); profile.role="developer"; }
+  isSuperAdmin=(user.email||"").toLowerCase()===SUPER_ADMIN_EMAIL;
+  if(isSuperAdmin){
+    myAdminPerms={readChats:true,ban:true,mute:true,deleteMessages:true};
+  }else{
+    const asnap=await get(ref(db,"admins/"+user.uid));
+    const p=asnap.exists()?asnap.val():{};
+    myAdminPerms={readChats:!!p.readChats,ban:!!p.ban,mute:!!p.mute,deleteMessages:!!p.deleteMessages};
   }
+  isAdmin=isSuperAdmin||Object.values(myAdminPerms).some(Boolean);
+  if(isAdmin) $("adminFab").classList.remove("hidden");
   renderMe();
   renderFriends();
   renderGroups();
