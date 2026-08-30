@@ -4,27 +4,27 @@
 <body>
 <div class="app">
 <aside class="sidebar">
-  <div class="sideTop"><div class="brand"><span>F</span> ForceNet</div><div class="topActions"><button id="adminFab" class="adminFab hidden" title="Админ-панель">🛡</button><button id="settingsBtn" class="iconBtn" title="Настройки">⚙</button></div></div>
+  <div class="sideTop"><div class="brand"><span>F</span> ForceNet</div><div class="topActions"><button id="ghostFab" class="adminFab ghostFab hidden" title="Режим привидения" data-icon="ghost"></button><button id="adminFab" class="adminFab hidden" title="Админ-панель" data-icon="shield"></button><button id="settingsBtn" class="iconBtn" title="Настройки" data-icon="gear"></button></div></div>
   <button id="me" class="profileCard"></button>
   <div class="searchRow"><input id="search" placeholder="Имя, юзернейм или ID" autocomplete="off"><button id="findBtn">Найти</button></div>
   <div id="searchResult" class="searchResult"></div>
   <div class="sectionTitle">Друзья</div>
   <div class="chats" id="chats"></div>
-  <div class="sectionTitle">Чаты<button id="newGroupBtn" class="iconBtn" title="Новый чат">＋</button></div>
+  <div class="sectionTitle">Чаты<button id="newGroupBtn" class="iconBtn" title="Новый чат" data-icon="plus"></button></div>
   <div class="chats" id="groupChats"></div>
   <button id="logout" class="logout">Выйти</button>
 </aside>
 <main class="chat">
-  <header class="chatHead" id="chatHead"><button id="backBtn" class="iconBtn mobileOnly">‹</button><div><strong id="chatTitle">Выберите чат</strong><small id="chatSub"></small></div><div class="headSpace" id="headActions"></div></header>
+  <header class="chatHead" id="chatHead"><button id="backBtn" class="iconBtn mobileOnly" data-icon="chevronLeft"></button><div><strong id="chatTitle">Выберите чат</strong><small id="chatSub"></small></div><div class="headSpace" id="headActions"></div></header>
   <div id="messages" class="messages"><div class="empty">Выберите друга или чат, чтобы начать общение.</div></div>
   <div id="filePreview" class="filePreview hidden"></div>
-  <div class="composer"><input id="fileInput" type="file" hidden accept="image/*,video/*,audio/*,.pdf,.txt,.zip,.doc,.docx,.xls,.xlsx"><button id="attachBtn" class="attachBtn" title="Прикрепить файл">📎</button><input id="text" placeholder="Написать сообщение…" autocomplete="off"><button id="send">Отправить</button></div>
+  <div class="composer"><input id="fileInput" type="file" hidden accept="image/*,video/*,audio/*,.pdf,.txt,.zip,.doc,.docx,.xls,.xlsx"><button id="attachBtn" class="attachBtn" title="Прикрепить файл" data-icon="paperclip"></button><input id="text" placeholder="Написать сообщение…" autocomplete="off"><button id="send">Отправить</button></div>
 </main>
 </div>
 
 
 <div id="settingsModal" class="modal hidden"><div class="modalCard settingsCard">
-  <div class="modalHead"><h2>Настройки</h2><button id="closeSettings" class="iconBtn">×</button></div>
+  <div class="modalHead"><h2>Настройки</h2><button id="closeSettings" class="iconBtn" data-icon="close"></button></div>
   <div class="avatarSettings">
     <img id="avatarPreview" class="avatar avatarLarge" alt="Аватар">
     <div><b>Аватар</b><small>Загрузите фото из галереи — будет видно всем</small>
@@ -66,13 +66,13 @@
 <div id="inviteModal" class="modal hidden"><div class="modalCard small"><h2>Приглашение в «<span id="inviteChatName"></span>»</h2><p>Перешлите эту ссылку — по ней сразу присоединятся к чату.</p><div class="copyRow"><input id="inviteLink" readonly><button id="copyInvite">Копировать</button></div><div class="modalActions"><button id="closeInvite" class="secondaryBtn">Готово</button></div></div></div>
 
 <div id="groupInfoModal" class="modal hidden"><div class="modalCard small">
-  <div class="modalHead"><h2 id="groupInfoTitle">Участники</h2><button id="closeGroupInfo" class="iconBtn">×</button></div>
+  <div class="modalHead"><h2 id="groupInfoTitle">Участники</h2><button id="closeGroupInfo" class="iconBtn" data-icon="close"></button></div>
   <div id="groupInfoList" class="groupInfoList"></div>
   <div class="modalActions"><button id="groupLeaveBtn" class="secondaryBtn hidden">Покинуть чат</button><button id="groupDeleteBtn" class="danger hidden">Удалить чат</button></div>
 </div></div>
 
 <div id="profileModal" class="modal hidden"><div class="modalCard small">
-  <div class="modalHead"><h2>Профиль</h2><button id="closeProfile" class="iconBtn">×</button></div>
+  <div class="modalHead"><h2>Профиль</h2><button id="closeProfile" class="iconBtn" data-icon="close"></button></div>
   <div class="profileView">
     <img id="profileAvatar" class="avatar avatarLarge" alt="">
     <div><b id="profileName"></b><small id="profileUsername"></small><small id="profileIdRow"></small><small id="profileRole" class="devTag hidden">developer</small></div>
@@ -80,30 +80,53 @@
 </div></div>
 
 <div id="adminModal" class="modal hidden"><div class="modalCard adminCard">
-  <div class="modalHead"><h2>Панель администратора</h2><button id="closeAdmin" class="iconBtn">×</button></div>
+  <div class="modalHead"><h2><span class="modalIcon" data-icon="shield"></span>Панель администратора</h2><button id="closeAdmin" class="iconBtn" data-icon="close"></button></div>
   <div class="adminTabs">
-    <button class="adminTab active" data-tab="accounts">Аккаунты</button>
-    <button class="adminTab" data-tab="groups">Группы</button>
+    <button class="adminTab active" data-tab="accounts"><span class="tabIcon" data-icon="user"></span>Аккаунты</button>
+    <button class="adminTab" data-tab="groups"><span class="tabIcon" data-icon="users"></span>Группы</button>
   </div>
+  <div class="adminSearchRow"><input id="adminSearch" class="adminSearch" placeholder="Поиск по имени, юзернейму или ID"></div>
   <div id="adminAccounts" class="adminPane"></div>
   <div id="adminGroups" class="adminPane hidden"></div>
 </div></div>
 
 <div id="permsModal" class="modal hidden"><div class="modalCard small">
-  <div class="modalHead"><h2>Права администратора</h2><button id="closePerms" class="iconBtn">×</button></div>
-  <p id="permsUserLabel" style="margin-top:0"></p>
-  <label class="checkRow"><input type="checkbox" id="permReadChats"> Читать переписки</label>
-  <label class="checkRow"><input type="checkbox" id="permBan"> Банить пользователей</label>
-  <label class="checkRow"><input type="checkbox" id="permMute"> Мутить пользователей</label>
-  <label class="checkRow"><input type="checkbox" id="permDeleteMsg"> Удалять чужие сообщения</label>
+  <div class="modalHead"><h2><span class="modalIcon" data-icon="gear"></span>Права администратора</h2><button id="closePerms" class="iconBtn" data-icon="close"></button></div>
+  <p id="permsUserLabel" class="permsUserLabel"></p>
+  <div class="permList">
+    <label class="switchRow"><span class="switchLabel"><b>Читать переписки</b><small>Просматривать диалоги пользователя в панели администратора.</small></span><span class="switch"><input type="checkbox" id="permReadChats"><span class="switchTrack"></span></span></label>
+    <label class="switchRow"><span class="switchLabel"><b>Банить пользователей</b><small>Временно блокировать вход в аккаунт.</small></span><span class="switch"><input type="checkbox" id="permBan"><span class="switchTrack"></span></span></label>
+    <label class="switchRow"><span class="switchLabel"><b>Мутить пользователей</b><small>Временно запрещать отправку сообщений.</small></span><span class="switch"><input type="checkbox" id="permMute"><span class="switchTrack"></span></span></label>
+    <label class="switchRow"><span class="switchLabel"><b>Удалять чужие сообщения</b><small>Удалять сообщения любых пользователей в чатах.</small></span><span class="switch"><input type="checkbox" id="permDeleteMsg"><span class="switchTrack"></span></span></label>
+    <label class="switchRow"><span class="switchLabel"><b>Режим привидения</b><small>Скрывать статус и читать сообщения незаметно для собеседников.</small></span><span class="switch"><input type="checkbox" id="permGhost"><span class="switchTrack"></span></span></label>
+  </div>
   <div class="modalActions"><button id="revokeAdminBtn" class="dangerLink" style="width:auto">Снять права полностью</button><button id="savePermsBtn" class="save" style="width:auto">Сохранить</button></div>
   <p id="permsStatus" class="deleteStatus"></p>
+</div></div>
+
+<div id="ghostModal" class="modal hidden"><div class="modalCard small ghostCard">
+  <div class="modalHead"><h2><span class="modalIcon" data-icon="ghost"></span>Режим привидения</h2><button id="closeGhost" class="iconBtn" data-icon="close"></button></div>
+  <p class="modalDesc">Скрывайте реальный статус и читайте чужие сообщения незаметно для собеседников.</p>
+  <label class="switchRow"><span class="switchLabel"><b>Включить режим привидения</b><small>Главный переключатель — настройки ниже работают только вместе с ним.</small></span><span class="switch"><input type="checkbox" id="ghostEnabled"><span class="switchTrack"></span></span></label>
+  <div class="settingsDivider"></div>
+  <div id="ghostOptions" class="ghostOptions">
+    <label class="ghostFieldLabel">Статус, который видят другие</label>
+    <div class="statusRow">
+      <button data-status="real" class="statusChoice"><span class="statusChoiceDot real"></span>Настоящий</button>
+      <button data-status="online" class="statusChoice"><span class="statusChoiceDot online"></span>В сети</button>
+      <button data-status="offline" class="statusChoice"><span class="statusChoiceDot"></span>Не в сети</button>
+    </div>
+    <div class="settingsDivider"></div>
+    <label class="switchRow"><span class="switchLabel"><b>Скрывать прочтение</b><small>Собеседник не увидит, что вы прочитали его сообщение — галочка останется серой.</small></span><span class="switch"><input type="checkbox" id="ghostHideReads"><span class="switchTrack"></span></span></label>
+  </div>
+  <button id="saveGhostBtn" class="save">Сохранить</button>
+  <p id="ghostStatus" class="deleteStatus"></p>
 </div></div>
 
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 import {getAuth,setPersistence,browserLocalPersistence,onAuthStateChanged,signOut,updateProfile,deleteUser,EmailAuthProvider,reauthenticateWithCredential} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
-import {getDatabase,ref,get,set,push,onValue,query,orderByChild,equalTo,update,remove,runTransaction} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
+import {getDatabase,ref,get,set,push,onValue,query,orderByChild,equalTo,update,remove,runTransaction,onDisconnect} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
 import {createClient} from "https://esm.sh/@supabase/supabase-js@2";
 
 const firebaseConfig={apiKey:"AIzaSyCiL-Eq-xQNRR8d-bReut-gahzy2BGTWds",authDomain:"forcenet-cefc2.firebaseapp.com",databaseURL:"https://forcenet-cefc2-default-rtdb.europe-west1.firebasedatabase.app/",projectId:"forcenet-cefc2",storageBucket:"forcenet-cefc2.firebasestorage.app",messagingSenderId:"1021268753513",appId:"1:1021268753513:web:f7af3b4e0e4ff40c48f6f8"};
@@ -115,9 +138,37 @@ const SUPER_ADMIN_EMAIL="az99arseniy@gmail.com";
 
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+
+/* ---------- Кастомные иконки (SVG, без эмодзи) ---------- */
+const ICONS={
+  shield:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.3l6.5 2.6v4.6c0 4.7-2.8 8-6.5 9.7-3.7-1.7-6.5-5-6.5-9.7V5.9L12 3.3z"/></svg>',
+  ghost:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 19.5V11a5.5 5.5 0 0 1 11 0v8.5l-2.1-1.6-1.9 1.6-1.9-1.6-1.9 1.6-1.9-1.6-1.3 1.6z"/><circle cx="9.7" cy="11.2" r="0.9" fill="currentColor" stroke="none"/><circle cx="14.3" cy="11.2" r="0.9" fill="currentColor" stroke="none"/></svg>',
+  gear:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><line x1="4" y1="6.5" x2="20" y2="6.5"/><circle cx="9" cy="6.5" r="2" fill="currentColor" stroke="none"/><line x1="4" y1="12" x2="20" y2="12"/><circle cx="15" cy="12" r="2" fill="currentColor" stroke="none"/><line x1="4" y1="17.5" x2="20" y2="17.5"/><circle cx="7.5" cy="17.5" r="2" fill="currentColor" stroke="none"/></svg>',
+  plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
+  pencil:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l0.7-3.6L15.2 6l3.4 3.4L8.1 19.9 4 20z"/><path d="M13.2 7.8l3.4 3.4"/></svg>',
+  trash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 7h15"/><path d="M9 7V4.8A1 1 0 0 1 10 3.8h4a1 1 0 0 1 1 1V7"/><path d="M6.2 7l0.9 12.2A1.2 1.2 0 0 0 8.3 20.3h7.4a1.2 1.2 0 0 0 1.2-1.1L17.8 7"/><line x1="10" y1="10.7" x2="10" y2="16.3"/><line x1="14" y1="10.7" x2="14" y2="16.3"/></svg>',
+  close:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>',
+  paperclip:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18.2 8.6l-7.6 7.6a3.1 3.1 0 0 1-4.4-4.4l7.5-7.5a2.1 2.1 0 0 1 3 3l-7.1 7.1a1.05 1.05 0 0 1-1.5-1.5l6.3-6.3"/></svg>',
+  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4.5,12.5 9.5,17.5 19.5,6.5"/></svg>',
+  ban:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="7.7"/><line x1="6.8" y1="6.8" x2="17.2" y2="17.2"/></svg>',
+  arrowDown:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="4" x2="12" y2="14.5"/><polyline points="7.5,10.5 12,15 16.5,10.5"/><path d="M5 19.2h14"/></svg>',
+  link:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9.3 14.7l5.4-5.4"/><path d="M10.4 6.2l0.9-0.9a3.6 3.6 0 0 1 5.4 5.4l-0.9 0.9"/><path d="M13.6 17.8l-0.9 0.9a3.6 3.6 0 0 1-5.4-5.4l0.9-0.9"/></svg>',
+  chat:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.3 5.3h15.4v10.6H8.6L4.3 20V5.3z"/></svg>',
+  mute:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.3v5.4h3.6l4.6 3.7V5.6l-4.6 3.7H4z"/><line x1="15.8" y1="9.5" x2="20.2" y2="14.5"/><line x1="20.2" y1="9.5" x2="15.8" y2="14.5"/></svg>',
+  unmute:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.3v5.4h3.6l4.6 3.7V5.6l-4.6 3.7H4z"/><path d="M16.2 9a4.3 4.3 0 0 1 0 6"/><path d="M18.5 6.7a7.6 7.6 0 0 1 0 10.6"/></svg>',
+  eye:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12S6 6.3 12 6.3 21.5 12 21.5 12 18 17.7 12 17.7 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.3" fill="currentColor" stroke="none"/></svg>',
+  broom:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M19.5 3.5L9.8 13.2"/><path d="M9.8 13.2l-2 5.7 5.7-2"/><path d="M4 20.5l3-3"/></svg>',
+  chevronLeft:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><polyline points="15,5 8,12 15,19"/></svg>',
+  user:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.3" r="3.4"/><path d="M4.5 19.8c0.6-3.8 3.7-6 7.5-6s6.9 2.2 7.5 6"/></svg>',
+  users:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8.4" r="2.8"/><path d="M2.7 19.6c0.5-3.2 3-5 6.3-5s5.8 1.8 6.3 5"/><circle cx="17" cy="9.2" r="2.2"/><path d="M14.7 19.6c0.4-2.4 2-3.9 4.4-3.9"/></svg>',
+};
+function icon(name){ return `<span class="icon" aria-hidden="true">${ICONS[name]||""}</span>`; }
+function renderStaticIcons(){ document.querySelectorAll("[data-icon]").forEach(el=>{ el.innerHTML=icon(el.dataset.icon); }); }
+renderStaticIcons();
 let myPublicId="",me=null,currentOther=null,currentChat="",unsub=null,profile=null,pendingDelete=null,AVATAR_URL="",isAdmin=false,isSuperAdmin=false,myMuteUntil=0;
-let myAdminPerms={readChats:false,ban:false,mute:false,deleteMessages:false};
+let myAdminPerms={readChats:false,ban:false,mute:false,deleteMessages:false,ghostMode:false};
 let permsTargetId=null,permsTargetUid=null;
+let ghostSettings={enabled:false,forcedStatus:null,hideReadReceipts:false},myGhostAllowed=false,statusUnsub=null;
 const WEEK=7*24*60*60*1000;
 const chatId=(a,b)=>[a,b].sort().join("_");
 function normalizeUsername(u){return String(u||"").trim().toLowerCase()}
@@ -193,6 +244,46 @@ async function renameFriend(id,current){
   if(!trimmed) return;
   await update(ref(db,`friends/${myPublicId}/${id}`),{alias:trimmed});
 }
+/* ---------- Онлайн/офлайн статус ---------- */
+function setupPresence(){
+  const myPresenceRef=ref(db,"presence/"+myPublicId);
+  onValue(ref(db,".info/connected"),snap=>{
+    if(snap.val()===true){
+      onDisconnect(myPresenceRef).set({state:"offline",lastChanged:Date.now()}).then(()=>{
+        set(myPresenceRef,{state:"online",lastChanged:Date.now()});
+      });
+    }
+  });
+  window.addEventListener("beforeunload",()=>{ set(myPresenceRef,{state:"offline",lastChanged:Date.now()}).catch(()=>{}); });
+}
+function effectiveOnline(presenceVal,ghostVal){
+  if(ghostVal && ghostVal.enabled && ghostVal.forcedStatus && ghostVal.forcedStatus!=="real") return ghostVal.forcedStatus==="online";
+  return !!(presenceVal && presenceVal.state==="online");
+}
+function attachStatusDot(container,id){
+  const dot=container.querySelector(".statusDot");
+  if(!dot) return;
+  let pv=null,gv=null;
+  const upd=()=>dot.classList.toggle("online",effectiveOnline(pv,gv));
+  onValue(ref(db,"presence/"+id),s=>{ pv=s.val(); upd(); });
+  onValue(ref(db,"ghostSettings/"+id),s=>{ gv=s.val(); upd(); });
+}
+function watchStatus(id){
+  if(statusUnsub){ statusUnsub(); statusUnsub=null; }
+  let pv=null,gv=null;
+  const upd=()=>{
+    if(!currentOther || currentOther.isGroup || currentOther.adminView || currentOther.id!==id) return;
+    const online=effectiveOnline(pv,gv);
+    if(online){ $("chatSub").innerHTML='<span class="statusDot online"></span>В сети'; }
+    else{
+      const seen=pv&&pv.lastChanged?` · был(а) в сети ${new Date(pv.lastChanged).toLocaleString([],{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})}`:"";
+      $("chatSub").innerHTML=`<span class="statusDot"></span>Не в сети${seen}`;
+    }
+  };
+  const u1=onValue(ref(db,"presence/"+id),s=>{ pv=s.val(); upd(); });
+  const u2=onValue(ref(db,"ghostSettings/"+id),s=>{ gv=s.val(); upd(); });
+  statusUnsub=()=>{ u1(); u2(); };
+}
 function renderFriends(){
   onValue(ref(db,`friends/${myPublicId}`),async snap=>{
     const box=$("chats"); box.innerHTML="";
@@ -205,7 +296,8 @@ function renderFriends(){
       const b=document.createElement("button");
       b.className="friend "+(currentOther&&!currentOther.isGroup&&currentOther.id===id?"active":"");
       b.dataset.id=id; b.dataset.kind="friend";
-      b.innerHTML=`<img class="avatar" src="${avatarFor(liveUser)}" alt=""><span><b>${esc(displayName)}</b><small>ID ${id}${f.alias?` · ${esc(liveUser.name||f.name)}`:""}</small></span><button class="friendRename" title="Переименовать для себя">✎</button><button class="friendRemove" title="Удалить из друзей">✕</button>`;
+      b.innerHTML=`<span class="avatarWrap"><img class="avatar" src="${avatarFor(liveUser)}" alt=""><span class="statusDot"></span></span><span><b>${esc(displayName)}</b><small>ID ${id}${f.alias?` · ${esc(liveUser.name||f.name)}`:""}</small></span><button class="friendRename" title="Переименовать для себя">${icon("pencil")}</button><button class="friendRemove" title="Удалить из друзей">${icon("close")}</button>`;
+      attachStatusDot(b,id);
       b.querySelector(".friendRename").onclick=async ev=>{ ev.stopPropagation(); await renameFriend(id,displayName); };
       b.querySelector(".friendRemove").onclick=async ev=>{
         ev.stopPropagation();
@@ -261,7 +353,7 @@ function closeChatIfCurrentGroup(id){ if(currentOther && currentOther.isGroup &&
 function renderGroups(){
   onValue(ref(db,`userGroups/${myPublicId}`),async snap=>{
     const box=$("groupChats"); box.innerHTML="";
-    if(!snap.exists()){ box.innerHTML='<div class="emptySide">Пока нет групповых чатов.<br>Нажмите ＋, чтобы создать.</div>'; return; }
+    if(!snap.exists()){ box.innerHTML=`<div class="emptySide">Пока нет групповых чатов.<br>Нажмите «${icon("plus")}», чтобы создать.</div>`; return; }
     const ids=[]; snap.forEach(x=>{ids.push(x.key);});
     for(const id of ids){
       const gs=await get(ref(db,"groups/"+id));
@@ -271,7 +363,7 @@ function renderGroups(){
       const b=document.createElement("button");
       b.className="friend "+(currentOther&&currentOther.isGroup&&currentOther.id===id?"active":"");
       b.dataset.id=id; b.dataset.kind="group";
-      b.innerHTML=`<span class="avatar groupAvatar">#</span><span><b>${esc(g.name)}</b><small>${count} участ.</small></span>`;
+      b.innerHTML=`<span class="avatar groupAvatar">${icon("users")}</span><span><b>${esc(g.name)}</b><small>${count} участ.</small></span>`;
       b.onclick=()=>openGroup(id,g);
       box.appendChild(b);
     }
@@ -370,7 +462,7 @@ async function findUser(){
     if(seen.has(id)) return; seen.add(id);
     const d=document.createElement("div");
     d.className="result";
-    d.innerHTML=`<img class="avatar" src="${avatarFor(u)}" alt=""><span class="resultInfo"><b>${esc(u.name)}</b><small>${u.username?`@${esc(u.username)} · `:""}ID ${id}</small></span><button>＋ Друг</button>`;
+    d.innerHTML=`<img class="avatar" src="${avatarFor(u)}" alt=""><span class="resultInfo"><b>${esc(u.name)}</b><small>${u.username?`@${esc(u.username)} · `:""}ID ${id}</small></span><button>${icon("plus")}Друг</button>`;
     d.querySelector("button").onclick=async()=>{ await saveFriend(id,u); openChat(id,u); };
     $("searchResult").appendChild(d);
   });
@@ -385,6 +477,7 @@ function highlightActive(){
 }
 function resetChatView(){
   currentOther=null; currentChat=""; if(unsub) unsub();
+  if(statusUnsub){ statusUnsub(); statusUnsub=null; }
   $("chatTitle").textContent="Выберите чат"; $("chatSub").textContent="";
   $("messages").innerHTML='<div class="empty">Выберите друга или чат, чтобы начать общение.</div>';
   document.body.classList.remove("chatOpen");
@@ -394,24 +487,30 @@ function resetChatView(){
 }
 function startConversationUI(){
   $("chatTitle").textContent=currentOther.name;
-  $("chatSub").textContent=currentOther.isGroup?`Групповой чат`:`ID ${currentOther.id}`;
+  if(statusUnsub){ statusUnsub(); statusUnsub=null; }
+  if(!currentOther.isGroup && !currentOther.adminView){
+    $("chatSub").textContent=`ID ${currentOther.id}`;
+    watchStatus(currentOther.id);
+  }else{
+    $("chatSub").textContent=currentOther.isGroup?`Групповой чат`:`ID ${currentOther.id}`;
+  }
   $("messages").innerHTML='<div class="empty">Загрузка…</div>';
   document.body.classList.add("chatOpen");
   document.querySelector(".composer").style.display=currentOther.adminView?"none":"flex";
   const headActions=$("headActions"); headActions.innerHTML="";
   if(currentOther.adminView){
     const btn=document.createElement("button");
-    btn.className="iconBtn"; btn.title="Вернуться в админ-панель"; btn.textContent="🛡";
+    btn.className="iconBtn"; btn.title="Вернуться в админ-панель"; btn.innerHTML=icon("shield");
     btn.onclick=()=>{ resetChatView(); $("adminModal").classList.remove("hidden"); };
     headActions.appendChild(btn);
   }else if(currentOther.isGroup){
     const btn=document.createElement("button");
-    btn.className="iconBtn"; btn.title="Пригласить"; btn.textContent="🔗";
+    btn.className="iconBtn"; btn.title="Пригласить"; btn.innerHTML=icon("link");
     btn.onclick=()=>openInvite(currentOther.id,currentOther.name);
     headActions.appendChild(btn);
   }else{
     const btn=document.createElement("button");
-    btn.className="iconBtn"; btn.title="Очистить мои сообщения в этом чате"; btn.textContent="🧹";
+    btn.className="iconBtn"; btn.title="Очистить мои сообщения в этом чате"; btn.innerHTML=icon("broom");
     btn.onclick=clearMyMessages;
     headActions.appendChild(btn);
   }
@@ -430,7 +529,7 @@ function openGroup(id,g){
   subscribeMessages();
 }
 function openAdminChat(accountId,friendId){
-  currentOther={id:friendId,name:`Просмотр: ${accountId} ↔ ${friendId}`,isGroup:false,adminView:true};
+  currentOther={id:friendId,name:`Просмотр: ${accountId} \u2194\uFE0E ${friendId}`,isGroup:false,adminView:true};
   currentChat=chatId(accountId,friendId);
   startConversationUI();
   subscribeMessages();
@@ -466,6 +565,16 @@ function subscribeMessages(){
     if(!arr.length){ container.innerHTML='<div class="empty">Пока нет сообщений.</div>'; return; }
     arr.forEach(m=>renderMessage(m));
     container.scrollTop=container.scrollHeight;
+    if(currentOther && !currentOther.isGroup && !currentOther.adminView){
+      const hideReads=ghostSettings.enabled && ghostSettings.hideReadReceipts;
+      if(!hideReads){
+        arr.forEach(m=>{
+          if(m.senderId===currentOther.id && !m.read){
+            update(ref(db,`messages/${currentChat}/${m.id}`),{read:true,readAt:Date.now()}).catch(()=>{});
+          }
+        });
+      }
+    }
   });
 }
 function renderMessage(m,existingEl){
@@ -481,14 +590,15 @@ function renderMessage(m,existingEl){
     if(t.startsWith("image/")) body+=`<a href="${esc(m.fileUrl)}" target="_blank" rel="noopener"><img class="chatImage" src="${esc(m.fileUrl)}" alt="${esc(m.fileName||"Фото")}" loading="lazy"></a>`;
     else if(t.startsWith("video/")) body+=`<video class="chatVideo" controls preload="metadata" src="${esc(m.fileUrl)}"></video>`;
     else if(t.startsWith("audio/")) body+=`<audio class="chatAudio" controls src="${esc(m.fileUrl)}"></audio>`;
-    else body+=`<a class="fileCard" href="${esc(m.fileUrl)}" target="_blank" rel="noopener">📎 ${esc(m.fileName||"Файл")}</a>`;
-    body+=`<a class="downloadFile" href="${esc(m.fileUrl)}" download="${esc(m.fileName||"")}">⬇ Скачать</a>`;
+    else body+=`<a class="fileCard" href="${esc(m.fileUrl)}" target="_blank" rel="noopener">${icon("paperclip")}${esc(m.fileName||"Файл")}</a>`;
+    body+=`<a class="downloadFile" href="${esc(m.fileUrl)}" download="${esc(m.fileName||"")}">${icon("arrowDown")}Скачать</a>`;
   }
   const time=new Date(m.createdAt||0).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
   let actions="";
   const canModerate=mine||(isAdmin&&myAdminPerms.deleteMessages);
-  if(canModerate) actions=`<div class="msgActions">${m.fileUrl?"":'<button class="editBtn" title="Изменить">✎</button>'}<button class="delBtn" title="Удалить">🗑</button></div>`;
-  el.innerHTML=`${body}<div class="msgMeta"><span>${time}${m.edited?" · изменено":""}</span></div>${actions}`;
+  if(canModerate) actions=`<div class="msgActions">${m.fileUrl?"":`<button class="editBtn" title="Изменить">${icon("pencil")}</button>`}<button class="delBtn" title="Удалить">${icon("trash")}</button></div>`;
+  const tick=(mine && currentOther && !currentOther.isGroup && !currentOther.adminView)?`<span class="readTick ${m.read?"read":""}">${icon("check")}</span>`:"";
+  el.innerHTML=`${body}<div class="msgMeta"><span>${time}${m.edited?" · изменено":""}</span>${tick}</div>${actions}`;
   if(canModerate){
     const editBtn=el.querySelector(".editBtn");
     if(editBtn) editBtn.onclick=()=>startEdit(m,el);
@@ -499,7 +609,7 @@ function renderMessage(m,existingEl){
 }
 function startEdit(m,el){
   const current=m.text||"";
-  el.innerHTML=`<textarea class="editArea">${esc(current)}</textarea><div class="msgActions"><button class="editSaveBtn">✓ Сохранить</button><button class="editCancelBtn">✕ Отмена</button></div>`;
+  el.innerHTML=`<textarea class="editArea">${esc(current)}</textarea><div class="msgActions"><button class="editSaveBtn">${icon("check")}Сохранить</button><button class="editCancelBtn">${icon("close")}Отмена</button></div>`;
   const ta=el.querySelector(".editArea");
   ta.focus(); ta.setSelectionRange(ta.value.length,ta.value.length);
   el.querySelector(".editCancelBtn").onclick=()=>renderMessage(m,el);
@@ -558,7 +668,7 @@ async function send(){
   const msgRef=push(ref(db,"messages/"+currentChat));
   try{
     const data={senderId:myPublicId,text,createdAt:Date.now(),expiresAt:Date.now()+WEEK};
-    if(currentOther.isGroup) data.senderName=profile.name;
+    if(currentOther.isGroup) data.senderName=profile.name; else data.read=false;
     if(file){
       if(file.size>100*1024*1024) throw new Error("Файл больше 100 МБ");
       const u=await uploadFile(file,msgRef.key);
@@ -718,16 +828,53 @@ $("copyInvite").onclick=async()=>{
   $("copyInvite").textContent="Скопировано"; setTimeout(()=>$("copyInvite").textContent="Копировать",1500);
 };
 
+/* ---------- Режим привидения ---------- */
+function syncGhostOptionsState(){
+  $("ghostOptions").classList.toggle("disabled",!$("ghostEnabled").checked);
+}
+$("ghostFab").onclick=()=>{
+  $("ghostEnabled").checked=!!ghostSettings.enabled;
+  $("ghostHideReads").checked=!!ghostSettings.hideReadReceipts;
+  document.querySelectorAll(".statusChoice").forEach(b=>b.classList.toggle("selected",(ghostSettings.forcedStatus||"real")===b.dataset.status));
+  syncGhostOptionsState();
+  $("ghostStatus").textContent="";
+  $("ghostModal").classList.remove("hidden");
+};
+$("closeGhost").onclick=()=>$("ghostModal").classList.add("hidden");
+$("ghostEnabled").onchange=syncGhostOptionsState;
+document.querySelectorAll(".statusChoice").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll(".statusChoice").forEach(x=>x.classList.remove("selected"));
+  b.classList.add("selected");
+});
+$("saveGhostBtn").onclick=async()=>{
+  if(!myGhostAllowed) return;
+  const forced=document.querySelector(".statusChoice.selected")?.dataset.status||"real";
+  ghostSettings={enabled:$("ghostEnabled").checked,forcedStatus:forced,hideReadReceipts:$("ghostHideReads").checked};
+  try{
+    await set(ref(db,"ghostSettings/"+myPublicId),ghostSettings);
+    $("ghostStatus").textContent="Сохранено.";
+  }catch(e){ console.error(e); $("ghostStatus").textContent="Не удалось сохранить."; }
+};
+
 /* ---------- Панель администратора ---------- */
-$("adminFab").onclick=()=>{ $("adminModal").classList.remove("hidden"); loadAdminAccounts(); };
+$("adminFab").onclick=()=>{ $("adminModal").classList.remove("hidden"); $("adminSearch").value=""; loadAdminAccounts(); };
 $("closeAdmin").onclick=()=>$("adminModal").classList.add("hidden");
 document.querySelectorAll(".adminTab").forEach(t=>t.onclick=()=>{
   document.querySelectorAll(".adminTab").forEach(x=>x.classList.remove("active"));
   t.classList.add("active");
   $("adminAccounts").classList.toggle("hidden",t.dataset.tab!=="accounts");
   $("adminGroups").classList.toggle("hidden",t.dataset.tab!=="groups");
+  $("adminSearch").value="";
+  $("adminSearch").placeholder=t.dataset.tab==="groups"?"Поиск по названию чата":"Поиск по имени, юзернейму или ID";
   if(t.dataset.tab==="groups") loadAdminGroups(); else loadAdminAccounts();
 });
+$("adminSearch").oninput=()=>{
+  const needle=$("adminSearch").value.trim().toLowerCase();
+  const visiblePane=$("adminAccounts").classList.contains("hidden")?$("adminGroups"):$("adminAccounts");
+  visiblePane.querySelectorAll(".adminRow").forEach(row=>{
+    row.classList.toggle("hidden", !!needle && !row.textContent.toLowerCase().includes(needle));
+  });
+};
 async function loadAdminAccounts(){
   const box=$("adminAccounts"); box.innerHTML="Загрузка…";
   const [usersSnap,bansSnap,mutesSnap,adminsSnap]=await Promise.all([get(ref(db,"users")),get(ref(db,"bans")),get(ref(db,"mutes")),get(ref(db,"admins"))]);
@@ -749,20 +896,24 @@ async function loadAdminAccounts(){
       if(perm.ban) active.push("бан");
       if(perm.mute) active.push("мьют");
       if(perm.deleteMessages) active.push("удаление");
-      if(active.length) adminBadge=` <span class="devTag" title="Права: ${active.join(", ")}">🛡 admin</span>`;
+      if(perm.ghostMode) active.push("привидение");
+      if(active.length) adminBadge=` <span class="devTag adminBadgeTag" title="Права: ${active.join(", ")}">${icon("shield")}admin</span>`;
     }
+    let statusLine="";
+    if(banned) statusLine+=`<span class="statusPill statusPillBan">${icon("ban")}забанен до ${new Date(ban.until).toLocaleString()}</span>`;
+    if(muted) statusLine+=`<span class="statusPill statusPillMute">${icon("mute")}замьючен до ${new Date(mute.until).toLocaleString()}</span>`;
     rows.push(`<div class="adminRow" data-id="${id}">
       <img class="avatar" src="${avatarFor(u)}" alt="">
       <div class="adminRowInfo"><b>${esc(u.name||id)}${isRowSuperAdmin?' <span class="devTag">developer</span>':""}${adminBadge}</b>
         <small>@${esc(u.username||"—")} · ID ${id}</small>
-        <small class="statusLine">${banned?`🚫 забанен до ${new Date(ban.until).toLocaleString()}`:""}${muted?` 🔇 замьючен до ${new Date(mute.until).toLocaleString()}`:""}</small>
+        ${statusLine?`<small class="statusLine">${statusLine}</small>`:""}
       </div>
       <div class="adminRowActions">
-        ${myAdminPerms.readChats?'<button class="chatsBtn" title="Переписки">💬</button>':""}
-        ${myAdminPerms.ban?`<button class="banBtn" title="${banned?"Разбанить":"Забанить"}">${banned?"✅":"🚫"}</button>`:""}
-        ${myAdminPerms.mute?`<button class="muteBtn" title="${muted?"Размьютить":"Замьютить"}">${muted?"🔊":"🔇"}</button>`:""}
-        ${isSuperAdmin && !isRowSuperAdmin?'<button class="permsBtn" title="Права администратора">⚙</button>':""}
-        ${isSuperAdmin?'<button class="delBtn" title="Удалить">🗑</button>':""}
+        ${myAdminPerms.readChats?`<button class="chatsBtn" title="Переписки">${icon("chat")}</button>`:""}
+        ${myAdminPerms.ban?`<button class="banBtn ${banned?"isActive":""}" title="${banned?"Разбанить":"Забанить"}">${banned?icon("check"):icon("ban")}</button>`:""}
+        ${myAdminPerms.mute?`<button class="muteBtn ${muted?"isActive":""}" title="${muted?"Размьютить":"Замьютить"}">${muted?icon("unmute"):icon("mute")}</button>`:""}
+        ${isSuperAdmin && !isRowSuperAdmin?`<button class="permsBtn" title="Права администратора">${icon("gear")}</button>`:""}
+        ${isSuperAdmin?`<button class="delBtn" title="Удалить">${icon("trash")}</button>`:""}
       </div>
       <div class="adminSub hidden"></div>
     </div>`);
@@ -789,13 +940,14 @@ async function openPerms(id){
   $("permBan").checked=!!p.ban;
   $("permMute").checked=!!p.mute;
   $("permDeleteMsg").checked=!!p.deleteMessages;
+  $("permGhost").checked=!!p.ghostMode;
   $("permsStatus").textContent="";
   $("permsModal").classList.remove("hidden");
 }
 $("closePerms").onclick=()=>$("permsModal").classList.add("hidden");
 $("savePermsBtn").onclick=async()=>{
   if(!permsTargetUid) return;
-  const perms={readChats:$("permReadChats").checked,ban:$("permBan").checked,mute:$("permMute").checked,deleteMessages:$("permDeleteMsg").checked};
+  const perms={readChats:$("permReadChats").checked,ban:$("permBan").checked,mute:$("permMute").checked,deleteMessages:$("permDeleteMsg").checked,ghostMode:$("permGhost").checked};
   const any=Object.values(perms).some(Boolean);
   try{
     if(any) await set(ref(db,"admins/"+permsTargetUid),{...perms,publicId:permsTargetId,grantedBy:myPublicId,grantedAt:Date.now()});
@@ -869,9 +1021,9 @@ async function loadAdminGroups(){
     const os=await get(ref(db,"users/"+g.ownerId));
     const ownerName=os.exists()?os.val().name:g.ownerId;
     rows.push(`<div class="adminRow" data-id="${id}" data-name="${esc(g.name)}">
-      <span class="avatar groupAvatar">#</span>
+      <span class="avatar groupAvatar">${icon("users")}</span>
       <div class="adminRowInfo"><b>${esc(g.name)}</b><small>Владелец: ${esc(ownerName)} · ${count} участ. · ${new Date(g.createdAt||0).toLocaleDateString()}</small></div>
-      <div class="adminRowActions">${myAdminPerms.readChats?'<button class="openGroupBtn" title="Открыть">👁</button>':""}${isSuperAdmin?'<button class="delGroupBtn" title="Удалить">🗑</button>':""}</div>
+      <div class="adminRowActions">${myAdminPerms.readChats?`<button class="openGroupBtn" title="Открыть">${icon("eye")}</button>`:""}${isSuperAdmin?`<button class="delGroupBtn" title="Удалить">${icon("trash")}</button>`:""}</div>
     </div>`);
   }
   box.innerHTML=rows.join("")||'<div class="emptySide">Групп ещё не создавали.</div>';
@@ -907,19 +1059,26 @@ onAuthStateChanged(auth,async user=>{
   AVATAR_URL=await ensureDefaultAvatar();
   isSuperAdmin=(user.email||"").toLowerCase()===SUPER_ADMIN_EMAIL;
   if(isSuperAdmin){
-    myAdminPerms={readChats:true,ban:true,mute:true,deleteMessages:true};
+    myAdminPerms={readChats:true,ban:true,mute:true,deleteMessages:true,ghostMode:true};
   }else{
     const asnap=await get(ref(db,"admins/"+user.uid));
     const p=asnap.exists()?asnap.val():{};
-    myAdminPerms={readChats:!!p.readChats,ban:!!p.ban,mute:!!p.mute,deleteMessages:!!p.deleteMessages};
+    myAdminPerms={readChats:!!p.readChats,ban:!!p.ban,mute:!!p.mute,deleteMessages:!!p.deleteMessages,ghostMode:!!p.ghostMode};
   }
   isAdmin=isSuperAdmin||Object.values(myAdminPerms).some(Boolean);
   if(isAdmin) $("adminFab").classList.remove("hidden");
+  myGhostAllowed=isSuperAdmin||myAdminPerms.ghostMode;
+  if(myGhostAllowed){
+    const gsnap=await get(ref(db,"ghostSettings/"+myPublicId));
+    ghostSettings=gsnap.exists()?{enabled:false,forcedStatus:null,hideReadReceipts:false,...gsnap.val()}:{enabled:false,forcedStatus:null,hideReadReceipts:false};
+    $("ghostFab").classList.remove("hidden");
+  }
   renderMe();
   renderFriends();
   renderGroups();
   cleanupAllChats();
   watchMyModeration();
+  setupPresence();
   await handleJoinParam();
   await handleAddParam();
 });
