@@ -29,7 +29,8 @@ body[data-theme=dark] .qrBox{background:#fff}
 .avatarSettings .secondaryBtn{width:max-content}
 .downloadFile{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:6px;padding:7px 9px;border-radius:9px;background:#00000010;color:inherit;text-decoration:none;font-size:12px;font-weight:700}
 .message.mine .downloadFile{background:#ffffff22}
-.msgActions{display:flex;gap:6px;justify-content:flex-end;margin-top:6px}
+.msgActions{display:flex;gap:6px;justify-content:flex-end;margin-top:0;max-height:0;overflow:hidden;opacity:0;pointer-events:none;transition:opacity .15s ease,max-height .15s ease,margin-top .15s ease}
+.message:hover .msgActions,.message.showActions .msgActions,.message.editing .msgActions{opacity:1;pointer-events:auto;max-height:40px;margin-top:6px}
 .msgActions button{border:0;border-radius:9px;padding:7px 10px;font-size:12px;font-weight:700;color:inherit;background:#0000000d}
 .message.mine .msgActions button{background:#ffffff20;color:#fff}
 .settingsCard{max-height:min(92dvh,760px);overflow-y:auto;overscroll-behavior:contain}
