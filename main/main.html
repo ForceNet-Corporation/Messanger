@@ -133,8 +133,33 @@ const firebaseConfig={apiKey:"AIzaSyCiL-Eq-xQNRR8d-bReut-gahzy2BGTWds",authDomai
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getDatabase(app); await setPersistence(auth,browserLocalPersistence);
 const supabase=createClient("https://btssggabiwcfibijlpee.supabase.co","sb_publishable_lb3EYFwtDxk17z810Ec2Sg_of3yqAoS");
 const FILE_BUCKET="chat-files";
-const AVATAR_PATH="default-avatar.png";
-const SUPER_ADMIN_EMAIL="az99arseniy@gmail.com";
+/* ---------- Создатель (developer) ----------
+   Почта создателя НИГДЕ не хранится и никогда не хранилась в этом файле —
+   ни в коде, ни даже в правилах Firebase. Единственный источник правды —
+   узел /system/creatorUid в Realtime Database. Он выставляется РОВНО ОДИН
+   РАЗ вручную самим владельцем проекта через Firebase Console (Realtime
+   Database → Data), а не через сайт. Правило ".write":false на этом узле
+   означает, что ни один клиент (в том числе сам создатель) не может
+   изменить его через приложение — только владелец проекта через консоль
+   Firebase, которая работает в обход правил. Сайт этот узел только читает. */
+async function getCreatorUid(){
+  const s=await get(ref(db,"system/creatorUid"));
+  return s.exists()?s.val():null;
+}
+/* Самолечение: если у кого-то, кроме настоящего создателя, вдруг оказался
+   role:"developer" (ручное вмешательство в базу, старые данные и т.п.) —
+   немедленно снимаем этот ранг. Работает только у клиента настоящего
+   создателя, потому что запись роли "developer" ↔ null защищена правилами. */
+function watchDeveloperUniqueness(creatorUid){
+  onValue(query(ref(db,"users"),orderByChild("role"),equalTo("developer")),snap=>{
+    snap.forEach(x=>{
+      const u=x.val();
+      if(u && u.uid!==creatorUid){
+        update(ref(db,"users/"+x.key),{role:null}).catch(()=>{});
+      }
+    });
+  });
+}
 
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
@@ -165,7 +190,7 @@ const ICONS={
 function icon(name){ return `<span class="icon" aria-hidden="true">${ICONS[name]||""}</span>`; }
 function renderStaticIcons(){ document.querySelectorAll("[data-icon]").forEach(el=>{ el.innerHTML=icon(el.dataset.icon); }); }
 renderStaticIcons();
-let myPublicId="",me=null,currentOther=null,currentChat="",unsub=null,profile=null,pendingDelete=null,AVATAR_URL="",isAdmin=false,isSuperAdmin=false,myMuteUntil=0;
+let myPublicId="",me=null,currentOther=null,currentChat="",unsub=null,profile=null,pendingDelete=null,AVATAR_URL="assets/avatar.jpg",isAdmin=false,isSuperAdmin=false,myMuteUntil=0;
 let myAdminPerms={readChats:false,ban:false,mute:false,deleteMessages:false,ghostMode:false};
 let permsTargetId=null,permsTargetUid=null;
 let ghostSettings={enabled:false,forcedStatus:null,hideReadReceipts:false},myGhostAllowed=false,statusUnsub=null;
@@ -189,30 +214,7 @@ async function loadProfile(user){for(let i=0;i<10;i++){const u=await getMyUser(u
 function applyTheme(t){document.body.dataset.theme=t||"dark";localStorage.setItem("forceNetTheme",t||"dark")}
 function renderMe(){$("me").innerHTML=`<img class="avatar" src="${avatarFor(profile)}" alt=""><span><b>${esc(profile.name)}${isSuperAdmin?' <span class="devTag">developer</span>':""}</b><small>@${esc(profile.username||"—")} · ID ${myPublicId}</small></span>`}
 
-/* ---------- Общий аватар по умолчанию в Supabase Storage (пока свой не загружен) ---------- */
-async function ensureDefaultAvatar(){
-  const cached=localStorage.getItem("forceNetAvatarUrl");
-  if(cached) return cached;
-  const pub=supabase.storage.from(FILE_BUCKET).getPublicUrl(AVATAR_PATH).data.publicUrl;
-  try{
-    const head=await fetch(pub,{method:"HEAD"});
-    if(head.ok){ localStorage.setItem("forceNetAvatarUrl",pub); return pub; }
-  }catch(e){/* файла ещё нет — создадим ниже */}
-  try{
-    const canvas=document.createElement("canvas"); canvas.width=128; canvas.height=128;
-    const ctx=canvas.getContext("2d");
-    const grad=ctx.createLinearGradient(0,0,128,128);
-    grad.addColorStop(0,"#6c5dff"); grad.addColorStop(1,"#8b7bff");
-    ctx.fillStyle=grad; ctx.beginPath(); ctx.arc(64,64,64,0,Math.PI*2); ctx.fill();
-    ctx.fillStyle="rgba(255,255,255,.92)";
-    ctx.beginPath(); ctx.arc(64,50,22,0,Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(64,112,34,30,0,Math.PI,0,true); ctx.fill();
-    const blob=await new Promise(res=>canvas.toBlob(res,"image/png"));
-    await supabase.storage.from(FILE_BUCKET).upload(AVATAR_PATH,blob,{contentType:"image/png",upsert:true});
-  }catch(e){ console.warn("Не удалось создать общий аватар",e); }
-  localStorage.setItem("forceNetAvatarUrl",pub);
-  return pub;
-}
+/* ---------- Аватар по умолчанию: локальный файл assets/avatar.jpg (пока свой не загружен) ---------- */
 $("changeAvatarBtn").onclick=()=>$("avatarFile").click();
 $("avatarFile").onchange=async e=>{
   const file=e.target.files[0];
@@ -415,7 +417,7 @@ async function openProfileView(id){
   $("profileName").textContent=u.name||id;
   $("profileUsername").textContent=u.username?`@${u.username}`:"";
   $("profileIdRow").textContent=`ID ${id}`;
-  $("profileRole").classList.toggle("hidden", (u.email||"").toLowerCase()!==SUPER_ADMIN_EMAIL);
+  $("profileRole").classList.toggle("hidden", u.role!=="developer");
   $("profileModal").classList.remove("hidden");
 }
 $("closeProfile").onclick=()=>$("profileModal").classList.add("hidden");
@@ -451,29 +453,22 @@ async function findUser(){
     s.forEach(x=>{
       if(x.key===myPublicId) return;
       const u=x.val();
-      if(String(u.name||"").toLowerCase().includes(needle) || String(u.username||"").toLowerCase().includes(needle)){
-        results.push([x.key,u]);
-      }
+      if(String(u.name||"").toLowerCase().includes(needle) || String(u.username||"").toLowerCase().includes(needle)) results.push([x.key,u]);
     });
   }
-  if(!results.length) return $("searchResult").textContent="Пользователь не найден.";
-  const seen=new Set();
-  results.slice(0,15).forEach(([id,u])=>{
-    if(seen.has(id)) return; seen.add(id);
-    const d=document.createElement("div");
-    d.className="result";
-    d.innerHTML=`<img class="avatar" src="${avatarFor(u)}" alt=""><span class="resultInfo"><b>${esc(u.name)}</b><small>${u.username?`@${esc(u.username)} · `:""}ID ${id}</small></span><button>${icon("plus")}Друг</button>`;
-    d.querySelector("button").onclick=async()=>{ await saveFriend(id,u); openChat(id,u); };
-    $("searchResult").appendChild(d);
-  });
-}
-
-/* ---------- Открытие чата (личного, группового, или в режиме администратора) ---------- */
-function highlightActive(){
-  document.querySelectorAll(".friend").forEach(b=>{
-    const isGroup=b.dataset.kind==="group";
-    b.classList.toggle("active", !!currentOther && currentOther.isGroup===isGroup && currentOther.id===b.dataset.id);
-  });
+  const box=$("searchResult");
+  if(!results.length){ box.innerHTML='<div class="emptySide">Никого не нашли.</div>'; return; }
+  for(const [id,u] of results){
+    const row=document.createElement("div");
+    row.className="result";
+    row.innerHTML=`<img class="avatar" src="${avatarFor(u)}" alt=""><div class="resultInfo"><b>${esc(u.name||id)}${u.role==="developer"?' <span class="devTag">developer</span>':""}</b><small>@${esc(u.username||"—")} · ID ${id}</small></div><button class="addBtn">Добавить</button>`;
+    row.querySelector(".addBtn").onclick=async()=>{
+      await saveFriend(id,u);
+      openChat(id,u);
+      box.innerHTML=""; $("search").value="";
+    };
+    box.appendChild(row);
+  }
 }
 function resetChatView(){
   currentOther=null; currentChat=""; if(unsub) unsub();
@@ -607,7 +602,19 @@ function renderMessage(m,existingEl){
   if(!existingEl) $("messages").appendChild(el);
   return el;
 }
+/* ---------- Показ кнопок «Изменить»/«Удалить» по наведению (десктоп) или тапу (телефон) ---------- */
+document.addEventListener("click",e=>{
+  const msgEl=e.target.closest(".message");
+  if(!msgEl){
+    document.querySelectorAll(".message.showActions").forEach(m=>m.classList.remove("showActions"));
+    return;
+  }
+  document.querySelectorAll(".message.showActions").forEach(m=>{ if(m!==msgEl) m.classList.remove("showActions"); });
+  if(e.target.closest(".msgActions") || e.target.closest("a") || e.target.closest(".editArea")) return;
+  if(msgEl.querySelector(".msgActions")) msgEl.classList.toggle("showActions");
+});
 function startEdit(m,el){
+  el.classList.add("editing");
   const current=m.text||"";
   el.innerHTML=`<textarea class="editArea">${esc(current)}</textarea><div class="msgActions"><button class="editSaveBtn">${icon("check")}Сохранить</button><button class="editCancelBtn">${icon("close")}Отмена</button></div>`;
   const ta=el.querySelector(".editArea");
@@ -887,7 +894,7 @@ async function loadAdminAccounts(){
     const ban=bans[id], mute=mutes[id];
     const banned=ban && ban.until>Date.now();
     const muted=mute && mute.until>Date.now();
-    const isRowSuperAdmin=(u.email||"").toLowerCase()===SUPER_ADMIN_EMAIL;
+    const isRowSuperAdmin=u.role==="developer";
     const perm=adminsByPublicId[id];
     let adminBadge="";
     if(perm && !isRowSuperAdmin){
@@ -1056,10 +1063,17 @@ onAuthStateChanged(auth,async user=>{
   myPublicId=profile.publicId;
   localStorage.setItem("forceNetPublicId",myPublicId);
   applyTheme(profile.theme||localStorage.getItem("forceNetTheme")||"dark");
-  AVATAR_URL=await ensureDefaultAvatar();
-  isSuperAdmin=(user.email||"").toLowerCase()===SUPER_ADMIN_EMAIL;
+  // Единственная проверка "создатель ли я" — совпадает ли мой uid со значением,
+  // один раз вручную выставленным владельцем проекта в Firebase Console.
+  const creatorUid=await getCreatorUid().catch(()=>null);
+  isSuperAdmin=!!creatorUid && creatorUid===user.uid;
+  if(isSuperAdmin && profile.role!=="developer"){
+    await update(ref(db,"users/"+myPublicId),{role:"developer"}).catch(()=>{});
+    profile.role="developer";
+  }
   if(isSuperAdmin){
     myAdminPerms={readChats:true,ban:true,mute:true,deleteMessages:true,ghostMode:true};
+    watchDeveloperUniqueness(creatorUid);
   }else{
     const asnap=await get(ref(db,"admins/"+user.uid));
     const p=asnap.exists()?asnap.val():{};
