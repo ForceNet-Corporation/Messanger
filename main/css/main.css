@@ -1,298 +1,108 @@
-*{box-sizing:border-box} :root{font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}body{margin:0;min-height:100dvh;background:#f5f7fb;color:#111827;transition:.2s}body[data-theme=dark]{background:#0b0f17;color:#f4f6fb}button,input{font:inherit}button{cursor:pointer}.app{min-height:100dvh;display:grid;grid-template-columns:minmax(280px,360px) 1fr}.sidebar{background:#fff;border-right:1px solid #e7eaf0;padding:18px;display:flex;flex-direction:column;gap:13px;min-width:0}.dark{}body[data-theme=dark] .sidebar,body[data-theme=dark] .chatHead,body[data-theme=dark] .composer{background:#111722;border-color:#252d3b}.sideTop,.chatHead,.modalHead{display:flex;align-items:center;justify-content:space-between}.brand{font-weight:800;font-size:21px;letter-spacing:-.4px}.brand span{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:11px;background:#5b6cff;color:#fff;margin-right:8px}.iconBtn{border:0;background:transparent;color:inherit;font-size:22px;border-radius:10px;padding:7px}.iconBtn:hover{background:#eef1f6}body[data-theme=dark] .iconBtn:hover{background:#1c2432}.profileCard{border:1px solid #e7eaf0;background:#f8fafc;color:inherit;text-align:left;padding:11px;border-radius:14px;display:flex;align-items:center;gap:10px}.avatar{width:38px;height:38px;flex:0 0 38px;border-radius:12px;background:#e7ebff;color:#4b5cf0;display:grid;place-items:center;font-weight:800}.profileCard span:last-child,.friend span:last-child{min-width:0}.profileCard b,.friend b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.profileCard small,.friend small,.result small,.chatHead small{display:block;color:#7d8799;font-size:11px;margin-top:2px}.searchRow{display:flex;gap:7px}.searchRow input,.composer input,.copyRow input,.modalCard>input{min-width:0;flex:1;border:1px solid #e0e5ed;background:#f8fafc;color:#111827;outline:0;border-radius:12px;padding:12px}.searchRow button,.composer button,.copyRow button,.save{border:0;border-radius:12px;background:#5b6cff;color:#fff;font-weight:700;padding:0 14px}.searchResult{display:grid;gap:7px;max-height:220px;overflow:auto}.result{display:flex;align-items:center;gap:8px;padding:8px;border-radius:12px;background:#f5f7fb}.resultInfo{min-width:0;flex:1}.resultInfo b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.result button{border:0;background:#e8ebff;color:#4454df;border-radius:9px;padding:7px 9px;font-weight:700}.sectionTitle{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#8b95a7;margin-top:4px}.chats{overflow:auto;flex:1}.friend{width:100%;border:0;background:transparent;color:inherit;padding:9px;border-radius:13px;display:flex;align-items:center;gap:10px;text-align:left}.friend:hover,.friend.active{background:#eef1ff}.logout{border:1px solid #e0e5ed;background:transparent;color:inherit;border-radius:12px;padding:10px}.chat{min-width:0;display:flex;flex-direction:column;background:#fbfcfe}.chatHead{height:72px;padding:14px 22px;border-bottom:1px solid #e7eaf0;background:#fff}.headSpace{width:30px}.messages{flex:1;overflow:auto;padding:24px;display:flex;flex-direction:column;gap:9px}.empty,.emptySide{margin:auto;color:#8993a5;text-align:center;line-height:1.5}.emptySide{margin:25px 8px}.message{max-width:min(72%,640px);padding:10px 12px;border-radius:16px 16px 16px 5px;background:#fff;border:1px solid #e7eaf0;box-shadow:0 3px 12px #18243b08;word-break:break-word}.message.mine{align-self:flex-end;background:#5b6cff;color:#fff;border-color:#5b6cff;border-radius:16px 16px 5px 16px}.bubbleText{white-space:pre-wrap}.msgMeta{display:flex;align-items:center;justify-content:flex-end;gap:8px;font-size:10px;opacity:.65;margin-top:5px}.msgMore{border:0;background:transparent;color:inherit;padding:0;font-size:12px}.composer{display:flex;gap:8px;padding:13px 18px;border-top:1px solid #e7eaf0;background:#fff}.composer button{padding:0 18px}.mobileOnly{display:none}.modal{position:fixed;inset:0;background:#0b102055;backdrop-filter:blur(5px);display:grid;place-items:center;padding:18px;z-index:10}.hidden{display:none}.modalCard{width:min(440px,100%);background:#fff;color:#111827;border-radius:22px;padding:23px;box-shadow:0 25px 80px #11182730}.modalCard.small{width:min(400px,100%)}.modalCard h2{margin:0 0 18px}.modalCard label{display:block;font-size:12px;color:#748096;margin:13px 0 6px}.copyRow{display:flex;gap:7px}.themeRow{display:grid;grid-template-columns:1fr 1fr;gap:8px}.themeChoice,.secondaryBtn,.danger{border:1px solid #dfe4ec;background:#f5f7fb;color:#1b2330;border-radius:11px;padding:11px}.themeChoice.selected{border-color:#5b6cff;background:#eef1ff;color:#4454df}.save{width:100%;padding:12px;margin-top:18px}.danger{background:#e5484d;color:#fff;border:0}.modalActions{display:flex;gap:8px;justify-content:flex-end}.modalActions button{padding:10px 16px}.modalCard p{color:#748096}.modalCard #settingsStatus{font-size:12px;color:#5b6cff;min-height:16px}@media(max-width:800px){.app{grid-template-columns:1fr}.sidebar{height:100dvh;border-right:0}.chat{position:fixed;inset:0;z-index:5;display:none}.chatOpen .chat{display:flex}.chatOpen .sidebar{display:none}.mobileOnly{display:block}.chatHead{padding-left:8px}.messages{padding:15px}.message{max-width:86%}.composer{padding-bottom:calc(13px + env(safe-area-inset-bottom))}.composer button{padding:0 13px}.brand{font-size:19px}}@media(max-width:420px){.sidebar{padding:13px}.searchRow button{padding:0 11px}.composer{padding-left:10px;padding-right:10px}.composer button{font-size:13px}.message{max-width:90%}.modalCard{padding:19px}}/* Тёмная тема — раньше эти правила были заперты в @media(min-width:801px) и НЕ применялись
-   на телефоне, из-за чего на мобильном оставались светлые карточки с унаследованным светлым
-   текстом (невидимый текст). Теперь действует всегда, независимо от размера экрана. */
-body[data-theme=dark] .chat{background:#0b0f17}
-body[data-theme=dark] .message{background:#151c29;border-color:#263043;color:#f4f6fb}
-body[data-theme=dark] .message.mine{background:#4f60e9;border-color:#4f60e9;color:#fff}
-body[data-theme=dark] .profileCard,body[data-theme=dark] .result{background:#171e2a;border-color:#273043;color:#f4f6fb}
-body[data-theme=dark] .friend:hover,body[data-theme=dark] .friend.active{background:#1a2340}
-body[data-theme=dark] .searchRow input,body[data-theme=dark] .composer input,body[data-theme=dark] .copyRow input,body[data-theme=dark] .modalCard>input{background:#0f151f;border-color:#293243;color:#fff}
-body[data-theme=dark] .logout{border-color:#2a3343;color:#f4f6fb}
-body[data-theme=dark] .modalCard{background:#171b26;color:#f4f6fb;box-shadow:0 25px 80px #00000060}
-body[data-theme=dark] .modalCard label{color:#96a1b6}
-body[data-theme=dark] .modalCard p{color:#96a1b6}
-body[data-theme=dark] .themeChoice,body[data-theme=dark] .secondaryBtn{background:#0f151f;border-color:#293243;color:#f4f6fb}
-body[data-theme=dark] .themeChoice.selected{background:#232c55;border-color:#5b6cff;color:#c3caff}
-body[data-theme=dark] .result button{background:#232c55;color:#c3caff}
-body[data-theme=dark] .emptySide,body[data-theme=dark] .empty{color:#7f8aa3}
-body[data-theme=dark] .message.theirs .fileCard{background:#202938;color:#f4f6fb}
-body[data-theme=dark] .iconBtn:hover{background:#1f2636}
-body[data-theme=dark] .qrBox{background:#fff}
-.filePreview{padding:8px 18px;border-top:1px solid #e7eaf0;font-size:12px;color:#69758a;background:#fff}.filePreview.hidden{display:none}.attachBtn{border:1px solid #e0e5ed;background:#f8fafc;color:inherit;border-radius:12px;width:44px}.chatImage{display:block;max-width:min(420px,70vw);max-height:420px;border-radius:12px;margin-top:3px}.chatVideo{display:block;width:min(460px,70vw);max-height:420px;border-radius:12px;margin-top:3px}.chatAudio{width:min(360px,70vw);margin-top:5px}.fileCard{display:flex;gap:8px;align-items:center;color:inherit;text-decoration:none;background:#ffffff18;border-radius:10px;padding:10px;margin-top:4px}.message.theirs .fileCard{background:#f1f4f8;color:#1b2330}body[data-theme=dark] .filePreview{background:#111722;border-color:#252d3b}body[data-theme=dark] .attachBtn{background:#0f151f;border-color:#293243;color:#fff}body[data-theme=dark] .message.theirs .fileCard{background:#202938;color:#fff}@media(max-width:800px){.chatImage{max-width:78vw}.chatVideo{width:78vw}.filePreview{padding:8px 10px}}
-
-/* Улучшения мобильного интерфейса и действий сообщений */
-.avatar img.avatar{object-fit:cover}
-.avatarLarge{width:64px;height:64px;flex-basis:64px;border-radius:18px;font-size:22px}
-.avatarSettings{display:flex;align-items:center;gap:14px;padding:4px 0 8px}
-.avatarSettings>div:last-child{display:flex;flex-direction:column;gap:5px;min-width:0}
-.avatarSettings small{color:#748096;font-size:11px}
-.avatarSettings .secondaryBtn{width:max-content}
-.downloadFile{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:6px;padding:7px 9px;border-radius:9px;background:#00000010;color:inherit;text-decoration:none;font-size:12px;font-weight:700}
-.message.mine .downloadFile{background:#ffffff22}
-.msgActions{display:flex;gap:6px;justify-content:flex-end;margin-top:6px}
-.msgActions button{border:0;border-radius:9px;padding:7px 10px;font-size:12px;font-weight:700;color:inherit;background:#0000000d}
-.message.mine .msgActions button{background:#ffffff20;color:#fff}
-.settingsCard{max-height:min(92dvh,760px);overflow-y:auto;overscroll-behavior:contain}
-@media(max-width:800px){
-  .modal{align-items:flex-end;padding:8px}
-  .settingsCard{width:100%;max-height:calc(100dvh - 16px);border-radius:22px 22px 14px 14px;padding:18px;overflow-y:auto}
-  .modalHead{position:sticky;top:-18px;padding-top:2px;padding-bottom:8px;background:inherit;z-index:2}
-  .copyRow{flex-wrap:wrap}.copyRow input{width:100%;flex-basis:100%}.copyRow button{min-height:42px}
-  .themeRow{grid-template-columns:1fr 1fr}
-  .avatarSettings{align-items:flex-start}
-  .composer{gap:6px}
-  .composer input{font-size:16px;padding:11px 10px}
-  .attachBtn{width:42px;flex:0 0 42px}
-  .composer button:last-child{padding:0 11px}
-  .msgActions{padding-bottom:2px}
-}
-@media(max-width:360px){
-  .brand{font-size:17px}.searchRow{gap:5px}.searchRow button{font-size:13px}.composer button:last-child{font-size:12px;padding:0 8px}.messages{padding:10px}.message{max-width:94%}
+:root {
+    --bg: #000000;
+    --bg-soft: #0a0a0a;
+    --fg: #00ff41;
+    --fg-dim: #008f11;
+    --accent: #00ff41;
+    --border: #003b00;
+    --font: 'Courier New', 'Consolas', monospace;
 }
 
-/* Message list stability fix */
-.app{height:100dvh;min-height:0}.chat{height:100%;min-height:0}.messages{min-height:0;align-items:stretch}.message{position:relative;flex:0 0 auto;align-self:flex-start}.message.mine{align-self:flex-end}.message>*{position:relative}
+* { box-sizing: border-box; }
 
-/* Юзернеймы, друзья, группы, редактирование сообщений — доп. стили */
-img.avatar{object-fit:cover;background:#e7ebff}
-body[data-theme=dark] .avatar{background:#1c2440;color:#a7b3ff}
-.sectionTitle{display:flex;align-items:center;justify-content:space-between}
-.sectionTitle .iconBtn{font-size:16px;padding:3px 7px}
-.chats{flex:none;overflow:visible}
-.sidebar{overflow-y:auto}
-.friendRename{margin-left:auto;border:0;background:transparent;color:inherit;opacity:.45;padding:5px;border-radius:8px;flex:none;font-size:13px}
-.friend:hover .friendRename{opacity:.85}
-.friendRename:hover{opacity:1;background:#00000014}
-.groupAvatar{font-weight:800}
-.senderName{font-size:11px;font-weight:700;color:#5b6cff;margin-bottom:3px}
-.message.mine .senderName{display:none}
-.editArea{width:100%;min-height:60px;border-radius:10px;border:1px solid #ffffff55;background:#ffffff15;color:inherit;padding:8px;font:inherit;resize:vertical;outline:0}
-.message.theirs .editArea{border-color:#00000022;background:#00000008;color:inherit}
-
-/* ---------- Мобильная адаптация: читаемость, отступы, safe-area ---------- */
-@media(max-width:800px){
-  input{font-size:16px} /* иначе iOS Safari зумит страницу при фокусе */
-  .sidebar{padding-top:calc(18px + env(safe-area-inset-top))}
-  .chatHead{height:auto;min-height:60px;padding:10px 12px;padding-top:calc(10px + env(safe-area-inset-top));gap:8px}
-  .chatHead>div{min-width:0;flex:1}
-  .chatTitleRow{display:flex;align-items:center;gap:8px}
-  .headSpace{display:flex;gap:6px;justify-content:flex-end;flex:none}
-  .brand span{width:30px;height:30px;font-size:15px;border-radius:9px}
-  .profileCard{padding:9px}
-  .avatar{width:34px;height:34px;flex:0 0 34px;border-radius:10px}
-  .message{max-width:88%}
-  .modalCard.small{width:100%}
-  .modalCard h2{font-size:17px}
-  .iconBtn{padding:8px}
-  .friend,.result{padding:10px}
+body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font);
+    margin: 0;
+    padding: 0;
+    line-height: 1.5;
+    text-shadow: 0 0 4px rgba(0,255,65,0.5);
 }
-@media(max-width:360px){
-  .messages{padding:10px}
-  .message{max-width:92%}
+
+h1, h2, h3 {
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
 }
-.headActionsRow{display:flex;gap:6px;align-items:center}
-.dangerLink{border:0;background:transparent;color:#e5484d;font-weight:700;padding:10px;text-align:center;width:100%;margin-top:6px;border-radius:10px}
-.dangerLink:hover{background:#e5484d15}
-.settingsDivider{height:1px;background:#e7eaf0;margin:16px 0}
-body[data-theme=dark] .settingsDivider{background:#252d3b}
-.qrBox{background:#fff;border-radius:14px;padding:12px;display:flex;justify-content:center;margin:10px 0}
-.qrBox img{width:100%;max-width:240px;display:block}
-.deleteStatus{font-size:12px;color:#e5484d;min-height:16px;margin-top:8px}
 
-/* ---------- Аватар из галереи, роль, владелец, профиль, группы, админ-панель ---------- */
-.devTag{color:#1fa855;font-weight:800;font-size:11px;vertical-align:middle}
-.ownerTag{color:#1fa855;font-weight:800;font-size:11px;margin-left:auto;white-space:nowrap;padding-left:8px}
-.uidRow{font-size:11px;color:#748096;word-break:break-all;margin-top:8px}
-.uidRow.hidden{display:none}
+h1::before { content: "> "; color: var(--fg-dim); }
 
-.groupInfoList{display:flex;flex-direction:column;gap:8px;max-height:50vh;overflow:auto;margin:8px 0}
-.memberRow{display:flex;align-items:center;gap:10px;padding:8px;border-radius:12px;background:#f5f7fb}
-body[data-theme=dark] .memberRow{background:#171e2a}
-.memberRow b{display:block}
-.memberRow small{display:block;color:#8993a5}
-
-.profileView{display:flex;align-items:center;gap:16px;padding:8px 0 4px}
-.profileView b{display:block;font-size:17px}
-.profileView small{display:block;color:#8993a5;margin-top:2px}
-.profileView .devTag{display:inline-block;margin-top:4px}
-
-/* Круглая зелёная кнопка админ-панели — фиксирована, видна везде поверх интерфейса */
-.topActions{display:flex;align-items:center;gap:3px}
-.adminFab{
-  position:static;z-index:auto;
-  width:32px;height:32px;border-radius:9px;border:0;
-  background:#1fa855;color:#fff;font-size:14px;
-  display:flex;align-items:center;justify-content:center;
-  box-shadow:none;padding:0;
+a {
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px dashed var(--border);
 }
-.adminFab.hidden{display:none}
-.adminFab:hover{background:#188f48}
-@media(max-width:800px){.topActions{gap:1px}.adminFab{width:30px;height:30px;border-radius:8px;font-size:13px}}
+a:hover { text-shadow: 0 0 8px var(--accent); }
 
-.adminCard{width:min(640px,100%)}
-.adminTabs{display:flex;gap:8px;margin:4px 0 14px}
-.adminTab{flex:1;border:1px solid #dfe4ec;background:#f5f7fb;color:#1b2330;border-radius:11px;padding:9px;font-weight:700}
-.adminTab.active{background:#eef1ff;border-color:#5b6cff;color:#4454df}
-body[data-theme=dark] .adminTab{background:#0f151f;border-color:#293243;color:#f4f6fb}
-body[data-theme=dark] .adminTab.active{background:#232c55;border-color:#5b6cff;color:#c3caff}
-.adminPane{max-height:60vh;overflow:auto;display:flex;flex-direction:column;gap:8px}
-.adminPane.hidden{display:none}
-.adminRow{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:10px;border-radius:12px;background:#f5f7fb}
-body[data-theme=dark] .adminRow{background:#171e2a}
-.adminRowInfo{flex:1;min-width:160px}
-.adminRowInfo small{display:block;color:#8993a5}
-.adminRowInfo small.statusLine:empty{display:none}
-.adminRowActions{display:flex;gap:6px;flex:none}
-.adminRowActions button{border:0;border-radius:9px;padding:7px 9px;font-size:13px;background:#e8ebff;color:#4454df;font-weight:700}
-body[data-theme=dark] .adminRowActions button{background:#232c55;color:#c3caff}
-.adminSub{width:100%;display:flex;flex-wrap:wrap;gap:6px;padding-top:6px;border-top:1px dashed #dfe4ec}
-.adminSub.hidden{display:none}
-body[data-theme=dark] .adminSub{border-color:#293243}
-.chip{border:1px solid #dfe4ec;background:#fff;color:#1b2330;border-radius:9px;padding:6px 9px;font-size:12px}
-body[data-theme=dark] .chip{background:#0f151f;border-color:#293243;color:#f4f6fb}
-@media(max-width:800px){.adminCard{width:100%}.adminRowActions{width:100%;justify-content:flex-start}}
-
-/* ---------- Гибкие права администратора / удаление из друзей ---------- */
-.checkRow{display:flex;align-items:center;gap:9px;padding:9px 0;font-size:14px;cursor:pointer}
-.checkRow input{width:18px;height:18px;flex:none;accent-color:#1fa855}
-.friendRemove{border:0;background:transparent;color:inherit;opacity:.45;padding:5px;border-radius:8px;flex:none;font-size:13px}
-.friend:hover .friendRemove{opacity:.85}
-.friendRemove:hover{opacity:1;background:#e5484d20;color:#e5484d}
-
-/* ---------- Онлайн/офлайн статус, галочки прочтения, режим привидения ---------- */
-.ghostFab{background:#6c5dff}
-.ghostFab:hover{background:#5b4de0}
-.avatarWrap{position:relative;flex:none}
-.avatarWrap .avatar{margin:0}
-.statusDot{position:absolute;right:-1px;bottom:-1px;width:10px;height:10px;border-radius:50%;background:#9aa4b7;border:2px solid #fff}
-.statusDot.online{background:#1fa855}
-body[data-theme=dark] .statusDot{border-color:#111722}
-.chatSub{display:flex;align-items:center;gap:6px}
-.chatSub .statusDot{position:static;border:0;width:8px;height:8px}
-.readTick{opacity:.7;color:#9aa4b7;font-weight:800}
-.message.mine .readTick{color:#ffffffb0}
-.readTick.read{color:#4be27a}
-.message.mine .readTick.read{color:#c8ffd8}
-.statusRow{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
-@media(max-width:420px){.statusRow{grid-template-columns:1fr}}
-
-
-/* ForceNet legacy visual theme — matched to the previous messenger */
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=JetBrains+Mono:wght@500&display=swap');
-
-:root{
-  --bg:#0b0d12;--bg-2:#12151d;--bg-3:#191d28;--border:#262b38;
-  --text:#e9ecf5;--text-dim:#8991a8;--accent:#5b7cff;--accent-2:#35e3c8;
-  --danger:#ff5c72;--owner:#ffb545;
+input, textarea, button {
+    background: var(--bg-soft);
+    color: var(--fg);
+    border: 1px solid var(--border);
+    font-family: var(--font);
+    padding: 10px 12px;
+    outline: none;
+    caret-color: var(--accent);
 }
-body[data-theme="light"]{
-  --bg:#f3f4f8;--bg-2:#fff;--bg-3:#eceef4;--border:#dbdfea;
-  --text:#14161f;--text-dim:#6b7286;--accent:#3d5fe0;--accent-2:#0fae95;
-  --danger:#d43a52;--owner:#b8791e;
+
+input:focus, textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 8px rgba(0,255,65,0.4);
 }
-*{box-sizing:border-box}
-html,body{height:100%;font-family:'Manrope',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
-body{background:var(--bg);color:var(--text)}
-button,input,textarea,select{font-family:inherit}
-button{border-radius:0}
 
-/* Shell */
-.app{height:100dvh;min-height:0;display:flex;background:var(--bg)}
-.sidebar{width:340px;min-width:280px;padding:0;border-right:1px solid var(--border);background:var(--bg-2);display:flex;flex-direction:column;gap:0;overflow-y:auto}
-.sideTop{padding:16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)}
-.brand{font-weight:800;font-size:18px;letter-spacing:-.02em;display:flex;align-items:center;flex:1}
-.brand span{display:inline-grid;place-items:center;width:28px;height:28px;background:var(--accent);color:#fff;margin-right:8px;border-radius:0}
-.topActions{display:flex;gap:6px}
-.adminFab,.ghostFab,.iconBtn{width:34px;height:34px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);background:var(--bg-3);color:var(--text);cursor:pointer;border-radius:0;padding:0}
-.iconBtn:hover,.adminFab:hover,.ghostFab:hover{border-color:var(--accent);background:var(--bg-3)}
-.profileCard{margin:12px 16px 2px;width:calc(100% - 32px);border:1px solid var(--border);background:var(--bg-3);color:var(--text);padding:10px;text-align:left;border-radius:0;display:flex;align-items:center;gap:10px}
-.avatar{width:42px;height:42px;flex:0 0 42px;border-radius:50%;background:var(--bg-3);object-fit:cover}
-.profileCard b{display:block}.profileCard small,.friend small,.result small,.chatHead small{color:var(--text-dim);font-size:11px}
-.devTag,.tag-owner{background:var(--owner)!important;color:#17120a!important;font-size:10px;font-weight:800;padding:1px 6px}
-.searchRow{padding:10px 16px;display:flex;gap:0}
-.searchRow input{width:100%;background:var(--bg-3);border:1px solid var(--border);color:var(--text);padding:9px 12px;font-size:13px;border-radius:0}
-.searchRow button{margin-left:6px;background:var(--accent);color:#fff;border:0;padding:0 12px;font-size:12px;font-weight:700}
-.searchResult{padding:0 16px;max-height:220px;overflow:auto}
-.result{display:flex;align-items:center;gap:8px;padding:9px;border-bottom:1px solid var(--border);background:transparent;border-radius:0;color:var(--text)}
-.result button{background:var(--accent);color:#fff;border:0;border-radius:0;padding:6px 9px}
-.sectionTitle{padding:10px 16px 6px;color:var(--text-dim);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}
-.sectionTitle .iconBtn{float:right;margin-top:-7px;width:28px;height:28px}
-.chats{flex:none;overflow:visible}
-.friend{width:100%;border:0;border-bottom:1px solid var(--border);background:transparent;color:var(--text);padding:10px 16px;border-radius:0;display:flex;align-items:center;gap:10px;text-align:left}
-.friend:hover,.friend.active{background:var(--bg-3);border-left:2px solid var(--accent);padding-left:14px}
-.friendRename{margin-left:auto;border:0;background:transparent;color:var(--text-dim);padding:5px;font-size:13px}
-.logout{margin:12px 16px 16px;border:1px solid var(--border);background:transparent;color:var(--text);border-radius:0;padding:10px}
-.chat{flex:1;min-width:0;height:100%;background:var(--bg);display:flex;flex-direction:column}
-.chatHead{height:auto;min-height:64px;padding:12px 20px;border-bottom:1px solid var(--border);background:var(--bg-2);display:flex;align-items:center;gap:12px}
-.chatHead strong{font-size:14px}.chatHead small{display:block;margin-top:2px}
-.messages{flex:1;min-height:0;overflow:auto;padding:20px;display:flex;flex-direction:column;gap:10px;background:var(--bg)}
-.message{max-width:60%;padding:0;background:transparent;border:0;box-shadow:none;word-break:break-word}
-.message.mine{align-self:flex-end;background:transparent;border:0}
-.message::before{display:none}
-.message>*{position:relative}
-.bubbleText,.message .fileCard,.message .chatImage,.message .chatVideo,.message .chatAudio{background:var(--bg-3);border:1px solid var(--border);border-radius:0;padding:9px 12px}
-.message.mine .bubbleText,.message.mine .fileCard{background:var(--accent);color:#fff;border-color:transparent}
-.message .chatImage,.message .chatVideo{padding:0;display:block}
-.msgMeta{font-size:10.5px;color:var(--text-dim);display:flex;gap:6px;margin-top:4px}
-.message.mine .msgMeta{color:var(--text-dim)}
-.msgActions{margin-top:4px}
-.msgActions button{border:1px solid var(--border);border-radius:0;background:var(--bg-2);color:var(--text);padding:5px 8px}
-.message.mine .msgActions button{background:var(--bg-2);color:var(--text)}
-.senderName{font-size:11px;font-weight:700;color:var(--accent);margin-bottom:3px}
-.composer{display:flex;align-items:center;gap:8px;padding:12px 16px;border-top:1px solid var(--border);background:var(--bg-2)}
-.composer input{flex:1;background:var(--bg-3);border:1px solid var(--border);color:var(--text);padding:11px 14px;border-radius:0;outline:none}
-.composer input:focus{border-color:var(--accent)}
-.attachBtn{width:36px;flex:0 0 36px;border:1px solid var(--border);background:var(--bg-3);color:var(--text);border-radius:0}
-.composer button:last-child{background:var(--accent);color:#fff;border:0;border-radius:0;font-weight:700;padding:0 18px}
-.filePreview{padding:8px 16px;border-top:1px solid var(--border);background:var(--bg-2);color:var(--text-dim)}
-.empty,.emptySide{color:var(--text-dim)}
-
-/* Modals */
-.modal{background:rgba(0,0,0,.55);backdrop-filter:blur(5px);align-items:center}
-.modalCard{background:var(--bg-2);color:var(--text);border:1px solid var(--border);border-radius:0;padding:24px;box-shadow:none;clip-path:polygon(0 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%)}
-.modalCard h2{font-size:17px}
-.modalCard p,.modalCard label{color:var(--text-dim)}
-.modalCard>input,.copyRow input{background:var(--bg-3);border:1px solid var(--border);color:var(--text);border-radius:0}
-.secondaryBtn,.themeChoice{background:var(--bg-3);border:1px solid var(--border);color:var(--text);border-radius:0}
-.themeChoice.selected{background:var(--accent);border-color:var(--accent);color:#fff}
-.save{background:var(--accent);border:0;border-radius:0;color:#fff}
-.danger{background:var(--danger);border:0;border-radius:0}
-.dangerLink{color:var(--danger);background:transparent;border:0}
-.settingsDivider{border-top:1px solid var(--border)}
-.groupInfoList{border-top:1px solid var(--border)}
-.checkRow{color:var(--text)!important}
-.qrBox{background:#fff;border:1px solid var(--border)}
-.adminTabs{display:flex;gap:18px;border-bottom:1px solid var(--border)}
-.adminTab{background:none;border:0;border-bottom:2px solid transparent;color:var(--text-dim);border-radius:0;padding:10px 0}
-.adminTab.active{color:var(--text);border-color:var(--accent)}
-.adminTable{color:var(--text)}
-.adminTable th,.adminTable td{border-bottom:1px solid var(--border)}
-.perm-chip{border:1px solid var(--border);border-radius:0}.perm-chip.active{background:var(--accent);border-color:var(--accent);color:#fff}
-
-/* ---------- Кастомные SVG-иконки (замена эмодзи) ---------- */
-.icn{display:inline-block;vertical-align:-3px;flex-shrink:0}
-.iconBtn .icn,.adminFab .icn,.ghostFab .icn,.attachBtn .icn{vertical-align:middle}
-.friendRename,.friendRemove{display:inline-flex;align-items:center;justify-content:center}
-.msgActions button{display:inline-flex;align-items:center;gap:5px}
-.msgActions button .icn{vertical-align:middle}
-.adminRowActions button{display:inline-flex;align-items:center;justify-content:center}
-.fileCard{}
-.fileCard .icn,.downloadFile .icn{vertical-align:-3px}
-.devTag .icn{vertical-align:-2px;margin-right:2px}
-.statusLine .icn{vertical-align:-2px;margin:0 1px}
-
-/* registration-compatible visual tokens when this stylesheet is reused */
-@media(max-width:820px){
- .sidebar{width:100%;min-width:0}
- .app.chatOpen .sidebar{display:none}
- .app.chatOpen .chat{display:flex}
- .app:not(.chatOpen) .chat{display:none}
- .message{max-width:82%}
+button {
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.15s;
 }
-@media(max-width:420px){
- .sidebar{padding-top:env(safe-area-inset-top)}
- .chatHead{padding-top:calc(10px + env(safe-area-inset-top))}
- .messages{padding:14px 12px}
- .message{max-width:90%}
- .composer{padding:10px}
+button:hover {
+    background: var(--accent);
+    color: var(--bg);
+    box-shadow: 0 0 12px var(--accent);
 }
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-soft); }
+::-webkit-scrollbar-thumb { background: var(--border); }
+::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+::selection { background: var(--accent); color: var(--bg); }
+
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.terminal {
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    padding: 16px;
+    position: relative;
+}
+.terminal::before {
+    content: "● ● ●";
+    color: var(--fg-dim);
+    letter-spacing: 4px;
+    font-size: 10px;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.message {
+    border-left: 2px solid var(--border);
+    padding: 8px 12px;
+    margin: 6px 0;
+}
+.message.own {
+    border-left-color: var(--accent);
+    background: rgba(0,255,65,0.05);
+}
+
+.blink {
+    animation: blink 1s step-end infinite;
+}
+@keyframes blink { 50% { opacity: 0; } }
