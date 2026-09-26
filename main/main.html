@@ -1,24 +1,24 @@
 <!doctype html>
 <html lang="ru">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#f5f7fb"><title>ForceNet</title><link rel="stylesheet" href="css/main.css"></head>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0d1117"><title>Sphere</title><link rel="stylesheet" href="css/main.css"></head>
 <body>
 <div class="app">
 <aside class="sidebar">
-  <div class="sideTop"><div class="brand"><span>F</span> ForceNet</div><div class="topActions"><button id="ghostFab" class="adminFab ghostFab hidden" title="Режим привидения" data-icon="ghost"></button><button id="adminFab" class="adminFab hidden" title="Админ-панель" data-icon="shield"></button><button id="settingsBtn" class="iconBtn" title="Настройки" data-icon="gear"></button></div></div>
+  <div class="sideTop"><div class="brand"><span class="brandMark"><img src="assets/sphere-mark.png" alt="Sphere"></span><strong>Sphere</strong></div><div class="topActions"><button id="ghostFab" class="adminFab ghostFab hidden" title="Режим привидения" data-icon="ghost"></button><button id="adminFab" class="adminFab hidden" title="Админ-панель" data-icon="shield"></button><button id="settingsBtn" class="iconBtn" title="Настройки" data-icon="gear"></button></div></div>
   <button id="me" class="profileCard"></button>
-  <div class="searchRow"><input id="search" placeholder="Имя, юзернейм или ID" autocomplete="off"><button id="findBtn">Найти</button></div>
+  <div class="searchRow"><input id="search" placeholder="Имя, юзернейм или ID" autocomplete="off"><button id="findBtn"><span class="buttonIcon" data-icon="search"></span>Найти</button></div>
   <div id="searchResult" class="searchResult"></div>
   <div class="sectionTitle">Друзья</div>
   <div class="chats" id="chats"></div>
   <div class="sectionTitle">Чаты<button id="newGroupBtn" class="iconBtn" title="Новый чат" data-icon="plus"></button></div>
   <div class="chats" id="groupChats"></div>
-  <button id="logout" class="logout">Выйти</button>
+  <button id="logout" class="logout"><span class="buttonIcon" data-icon="logout"></span>Выйти</button>
 </aside>
 <main class="chat">
   <header class="chatHead" id="chatHead"><button id="backBtn" class="iconBtn mobileOnly" data-icon="chevronLeft"></button><div><strong id="chatTitle">Выберите чат</strong><small id="chatSub"></small></div><div class="headSpace" id="headActions"></div></header>
   <div id="messages" class="messages"><div class="empty">Выберите друга или чат, чтобы начать общение.</div></div>
   <div id="filePreview" class="filePreview hidden"></div>
-  <div class="composer"><input id="fileInput" type="file" hidden accept="image/*,video/*,audio/*,.pdf,.txt,.zip,.doc,.docx,.xls,.xlsx"><button id="attachBtn" class="attachBtn" title="Прикрепить файл" data-icon="paperclip"></button><input id="text" placeholder="Написать сообщение…" autocomplete="off"><button id="send">Отправить</button></div>
+  <div class="composer"><input id="fileInput" type="file" hidden accept="image/*,video/*,audio/*,.pdf,.txt,.zip,.doc,.docx,.xls,.xlsx"><button id="attachBtn" class="attachBtn" title="Прикрепить файл" data-icon="paperclip"></button><input id="text" placeholder="Написать сообщение…" autocomplete="off"><button id="send"><span class="buttonIcon" data-icon="send"></span>Отправить</button></div>
 </main>
 </div>
 
@@ -45,7 +45,7 @@
 
 <div id="qrModal" class="modal hidden"><div class="modalCard small">
   <h2>Ваш QR-код</h2>
-  <p>Отсканировав его, человек сразу добавит вас в друзья в ForceNet.</p>
+  <p>Отсканировав его, человек сразу добавит вас в друзья в Sphere.</p>
   <div class="qrBox"><img id="qrImage" alt="QR-код"></div>
   <div class="copyRow"><input id="qrLink" readonly><button id="copyQrLink">Копировать</button></div>
   <div class="modalActions"><button id="closeQr" class="secondaryBtn">Готово</button></div>
@@ -65,10 +65,25 @@
 
 <div id="inviteModal" class="modal hidden"><div class="modalCard small"><h2>Приглашение в «<span id="inviteChatName"></span>»</h2><p>Перешлите эту ссылку — по ней сразу присоединятся к чату.</p><div class="copyRow"><input id="inviteLink" readonly><button id="copyInvite">Копировать</button></div><div class="modalActions"><button id="closeInvite" class="secondaryBtn">Готово</button></div></div></div>
 
-<div id="groupInfoModal" class="modal hidden"><div class="modalCard small">
-  <div class="modalHead"><h2 id="groupInfoTitle">Участники</h2><button id="closeGroupInfo" class="iconBtn" data-icon="close"></button></div>
+<div id="groupInfoModal" class="modal hidden"><div class="modalCard groupProfileCard">
+  <div class="modalHead"><h2 id="groupInfoTitle">Чат</h2><button id="closeGroupInfo" class="iconBtn" data-icon="close"></button></div>
+  <div class="groupProfileSummary"><div id="groupInfoAvatar" class="groupProfileAvatar"><span data-icon="users"></span></div><div><b id="groupInfoName"></b><small id="groupInfoMeta"></small></div></div>
+  <div class="groupActionGrid">
+    <button id="groupInviteBtn" class="secondaryBtn actionBtn"><span data-icon="link"></span>Пригласить</button>
+    <button id="groupSettingsBtn" class="secondaryBtn actionBtn"><span data-icon="gear"></span>Настройки</button>
+  </div>
+  <div class="groupSectionLabel">Участники</div>
   <div id="groupInfoList" class="groupInfoList"></div>
-  <div class="modalActions"><button id="groupLeaveBtn" class="secondaryBtn hidden">Покинуть чат</button><button id="groupDeleteBtn" class="danger hidden">Удалить чат</button></div>
+  <div class="modalActions"><button id="groupLeaveBtn" class="secondaryBtn hidden"><span data-icon="logout"></span>Покинуть чат</button><button id="groupDeleteBtn" class="danger hidden"><span data-icon="trash"></span>Удалить чат</button></div>
+</div></div>
+
+<div id="groupSettingsModal" class="modal hidden"><div class="modalCard small">
+  <div class="modalHead"><h2>Настройки чата</h2><button id="closeGroupSettings" class="iconBtn" data-icon="close"></button></div>
+  <label>Название чата</label><input id="groupSettingsName" maxlength="60">
+  <button id="saveGroupSettings" class="save"><span data-icon="check"></span>Сохранить</button>
+  <div class="settingsDivider"></div>
+  <div class="modalActions"><button id="settingsInviteBtn" class="secondaryBtn"><span data-icon="link"></span>Пригласить</button><button id="settingsLeaveBtn" class="secondaryBtn"><span data-icon="logout"></span>Покинуть</button><button id="settingsDeleteBtn" class="danger"><span data-icon="trash"></span>Удалить</button></div>
+  <p id="groupSettingsStatus" class="deleteStatus"></p>
 </div></div>
 
 <div id="profileModal" class="modal hidden"><div class="modalCard small">
@@ -77,6 +92,7 @@
     <img id="profileAvatar" class="avatar avatarLarge" alt="">
     <div><b id="profileName"></b><small id="profileUsername"></small><small id="profileIdRow"></small><small id="profileRole" class="devTag hidden">developer</small></div>
   </div>
+  <div id="profileActions" class="profileActions"></div>
 </div></div>
 
 <div id="adminModal" class="modal hidden"><div class="modalCard adminCard">
@@ -139,31 +155,13 @@ const SUPER_ADMIN_EMAIL="az99arseniy@gmail.com";
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
 
-/* ---------- Кастомные иконки (SVG, без эмодзи) ---------- */
-const ICONS={
-  shield:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.3l6.5 2.6v4.6c0 4.7-2.8 8-6.5 9.7-3.7-1.7-6.5-5-6.5-9.7V5.9L12 3.3z"/></svg>',
-  ghost:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 19.5V11a5.5 5.5 0 0 1 11 0v8.5l-2.1-1.6-1.9 1.6-1.9-1.6-1.9 1.6-1.9-1.6-1.3 1.6z"/><circle cx="9.7" cy="11.2" r="0.9" fill="currentColor" stroke="none"/><circle cx="14.3" cy="11.2" r="0.9" fill="currentColor" stroke="none"/></svg>',
-  gear:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><line x1="4" y1="6.5" x2="20" y2="6.5"/><circle cx="9" cy="6.5" r="2" fill="currentColor" stroke="none"/><line x1="4" y1="12" x2="20" y2="12"/><circle cx="15" cy="12" r="2" fill="currentColor" stroke="none"/><line x1="4" y1="17.5" x2="20" y2="17.5"/><circle cx="7.5" cy="17.5" r="2" fill="currentColor" stroke="none"/></svg>',
-  plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
-  pencil:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l0.7-3.6L15.2 6l3.4 3.4L8.1 19.9 4 20z"/><path d="M13.2 7.8l3.4 3.4"/></svg>',
-  trash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 7h15"/><path d="M9 7V4.8A1 1 0 0 1 10 3.8h4a1 1 0 0 1 1 1V7"/><path d="M6.2 7l0.9 12.2A1.2 1.2 0 0 0 8.3 20.3h7.4a1.2 1.2 0 0 0 1.2-1.1L17.8 7"/><line x1="10" y1="10.7" x2="10" y2="16.3"/><line x1="14" y1="10.7" x2="14" y2="16.3"/></svg>',
-  close:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>',
-  paperclip:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18.2 8.6l-7.6 7.6a3.1 3.1 0 0 1-4.4-4.4l7.5-7.5a2.1 2.1 0 0 1 3 3l-7.1 7.1a1.05 1.05 0 0 1-1.5-1.5l6.3-6.3"/></svg>',
-  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4.5,12.5 9.5,17.5 19.5,6.5"/></svg>',
-  ban:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="7.7"/><line x1="6.8" y1="6.8" x2="17.2" y2="17.2"/></svg>',
-  arrowDown:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="4" x2="12" y2="14.5"/><polyline points="7.5,10.5 12,15 16.5,10.5"/><path d="M5 19.2h14"/></svg>',
-  link:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9.3 14.7l5.4-5.4"/><path d="M10.4 6.2l0.9-0.9a3.6 3.6 0 0 1 5.4 5.4l-0.9 0.9"/><path d="M13.6 17.8l-0.9 0.9a3.6 3.6 0 0 1-5.4-5.4l0.9-0.9"/></svg>',
-  chat:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.3 5.3h15.4v10.6H8.6L4.3 20V5.3z"/></svg>',
-  mute:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.3v5.4h3.6l4.6 3.7V5.6l-4.6 3.7H4z"/><line x1="15.8" y1="9.5" x2="20.2" y2="14.5"/><line x1="20.2" y1="9.5" x2="15.8" y2="14.5"/></svg>',
-  unmute:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.3v5.4h3.6l4.6 3.7V5.6l-4.6 3.7H4z"/><path d="M16.2 9a4.3 4.3 0 0 1 0 6"/><path d="M18.5 6.7a7.6 7.6 0 0 1 0 10.6"/></svg>',
-  eye:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12S6 6.3 12 6.3 21.5 12 21.5 12 18 17.7 12 17.7 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.3" fill="currentColor" stroke="none"/></svg>',
-  broom:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M19.5 3.5L9.8 13.2"/><path d="M9.8 13.2l-2 5.7 5.7-2"/><path d="M4 20.5l3-3"/></svg>',
-  chevronLeft:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><polyline points="15,5 8,12 15,19"/></svg>',
-  user:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.3" r="3.4"/><path d="M4.5 19.8c0.6-3.8 3.7-6 7.5-6s6.9 2.2 7.5 6"/></svg>',
-  users:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8.4" r="2.8"/><path d="M2.7 19.6c0.5-3.2 3-5 6.3-5s5.8 1.8 6.3 5"/><circle cx="17" cy="9.2" r="2.2"/><path d="M14.7 19.6c0.4-2.4 2-3.9 4.4-3.9"/></svg>',
-};
-function icon(name){ return `<span class="icon" aria-hidden="true">${ICONS[name]||""}</span>`; }
-function renderStaticIcons(){ document.querySelectorAll("[data-icon]").forEach(el=>{ el.innerHTML=icon(el.dataset.icon); }); }
+/* ---------- Внешние SVG-иконки ---------- */
+const ICON_NAMES=new Set(['shield','ghost','gear','plus','pencil','trash','close','paperclip','check','ban','arrowDown','link','chat','mute','unmute','eye','broom','chevronLeft','user','users','search','send','file','personAdd','personRemove','usersGear','info','logout']);
+function icon(name){
+  if(!ICON_NAMES.has(name)) return '';
+  return `<span class="icon" aria-hidden="true"><img class="icn" src="assets/icons/${name}.svg" alt=""></span>`;
+}
+function renderStaticIcons(){ document.querySelectorAll('[data-icon]').forEach(el=>{ el.innerHTML=icon(el.dataset.icon); }); }
 renderStaticIcons();
 let myPublicId="",me=null,currentOther=null,currentChat="",unsub=null,profile=null,pendingDelete=null,AVATAR_URL="",isAdmin=false,isSuperAdmin=false,myMuteUntil=0;
 let myAdminPerms={readChats:false,ban:false,mute:false,deleteMessages:false,ghostMode:false};
@@ -201,12 +199,12 @@ async function ensureDefaultAvatar(){
   try{
     const canvas=document.createElement("canvas"); canvas.width=128; canvas.height=128;
     const ctx=canvas.getContext("2d");
-    const grad=ctx.createLinearGradient(0,0,128,128);
-    grad.addColorStop(0,"#6c5dff"); grad.addColorStop(1,"#8b7bff");
-    ctx.fillStyle=grad; ctx.beginPath(); ctx.arc(64,64,64,0,Math.PI*2); ctx.fill();
-    ctx.fillStyle="rgba(255,255,255,.92)";
-    ctx.beginPath(); ctx.arc(64,50,22,0,Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(64,112,34,30,0,Math.PI,0,true); ctx.fill();
+    ctx.fillStyle="#1b2330"; ctx.beginPath(); ctx.arc(64,64,64,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle="#3b4760"; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(64,64,61,0,Math.PI*2); ctx.stroke();
+    ctx.fillStyle="#e9edf4";
+    ctx.beginPath(); ctx.arc(64,47,21,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(28,112); ctx.quadraticCurveTo(32,78,64,78); ctx.quadraticCurveTo(96,78,100,112); ctx.closePath(); ctx.fill();
+    ctx.fillStyle="#6d7cff"; ctx.beginPath(); ctx.arc(98,98,8,0,Math.PI*2); ctx.fill();
     const blob=await new Promise(res=>canvas.toBlob(res,"image/png"));
     await supabase.storage.from(FILE_BUCKET).upload(AVATAR_PATH,blob,{contentType:"image/png",upsert:true});
   }catch(e){ console.warn("Не удалось создать общий аватар",e); }
@@ -389,33 +387,84 @@ async function openGroupInfo(id){
   const gs=await get(ref(db,"groups/"+id));
   if(!gs.exists()) return;
   const g=gs.val();
-  $("groupInfoTitle").textContent=g.name;
+  currentGroupInfoId=id;
+  $("groupInfoTitle").textContent=g.name||"Чат";
+  $("groupInfoName").textContent=g.name||"Чат";
   const memberIds=Object.keys(g.members||{});
+  $("groupInfoMeta").textContent=`${memberIds.length} участ. · ${g.ownerId===myPublicId?'Вы владелец':'групповой чат'}`;
   const box=$("groupInfoList"); box.innerHTML="Загрузка…";
   const rows=[];
   for(const mid of memberIds){
     const us=await get(ref(db,"users/"+mid));
     const u=us.exists()?us.val():{name:mid};
-    rows.push(`<div class="memberRow"><img class="avatar" src="${avatarFor(u)}" alt=""><span><b>${esc(u.name||mid)}</b><small>ID ${mid}</small></span>${mid===g.ownerId?'<span class="ownerTag">Владелец</span>':""}</div>`);
+    rows.push(`<button class="memberRow memberButton" data-member-id="${esc(mid)}"><img class="avatar" src="${avatarFor(u)}" alt=""><span><b>${esc(u.name||mid)}</b><small>${u.username?`@${esc(u.username)} · `:""}ID ${esc(mid)}</small></span>${mid===g.ownerId?'<span class="ownerTag">Владелец</span>':""}</button>`);
   }
-  box.innerHTML=rows.join("");
+  box.innerHTML=rows.join("")||'<div class="emptySide">Нет участников.</div>';
+  box.querySelectorAll('.memberButton').forEach(b=>b.onclick=()=>openProfileView(b.dataset.memberId));
   const iAmOwner=g.ownerId===myPublicId;
   $("groupLeaveBtn").classList.toggle("hidden",iAmOwner);
   $("groupDeleteBtn").classList.toggle("hidden",!iAmOwner);
+  $("groupSettingsBtn").classList.toggle("hidden",!iAmOwner);
   $("groupLeaveBtn").onclick=()=>leaveGroup(id);
   $("groupDeleteBtn").onclick=()=>deleteGroup(id);
+  $("groupInviteBtn").onclick=()=>openInvite(id,g.name);
+  $("groupSettingsBtn").onclick=()=>openGroupSettings(id,g);
   $("groupInfoModal").classList.remove("hidden");
 }
+let currentGroupInfoId="";
+function openGroupSettings(id,g){
+  $("groupSettingsName").value=g.name||"";
+  $("groupSettingsStatus").textContent="";
+  $("settingsLeaveBtn").classList.toggle("hidden",g.ownerId===myPublicId);
+  $("settingsDeleteBtn").classList.toggle("hidden",g.ownerId!==myPublicId);
+  $("groupSettingsModal").dataset.id=id;
+  $("groupSettingsModal").classList.remove("hidden");
+}
+$("closeGroupSettings").onclick=()=>$('groupSettingsModal').classList.add('hidden');
+$("saveGroupSettings").onclick=async()=>{
+  const id=$("groupSettingsModal").dataset.id; const name=$("groupSettingsName").value.trim();
+  if(!id || name.length<2) return $("groupSettingsStatus").textContent="Название должно быть не короче 2 символов.";
+  try{
+    const gs=await get(ref(db,"groups/"+id)); if(!gs.exists()) return;
+    if(gs.val().ownerId!==myPublicId) return $("groupSettingsStatus").textContent="Настройки доступны только владельцу.";
+    await update(ref(db,"groups/"+id),{name});
+    if(currentOther?.isGroup && currentOther.id===id){ currentOther.name=name; $("chatTitle").textContent=name; }
+    $("groupSettingsStatus").textContent="Сохранено.";
+    setTimeout(()=>{$("groupSettingsModal").classList.add("hidden"); openGroupInfo(id);},500);
+  }catch(e){ console.error(e); $("groupSettingsStatus").textContent="Не удалось сохранить."; }
+};
+$("settingsInviteBtn").onclick=async()=>{ const id=$("groupSettingsModal").dataset.id; const gs=await get(ref(db,"groups/"+id)); if(gs.exists()) openInvite(id,gs.val().name); };
+$("settingsLeaveBtn").onclick=async()=>{ const id=$("groupSettingsModal").dataset.id; await leaveGroup(id); $("groupSettingsModal").classList.add("hidden"); };
+$("settingsDeleteBtn").onclick=async()=>{ const id=$("groupSettingsModal").dataset.id; await deleteGroup(id); $("groupSettingsModal").classList.add("hidden"); };
 $("closeGroupInfo").onclick=()=>$("groupInfoModal").classList.add("hidden");
+async function isFriend(id){
+  if(!id || id===myPublicId) return false;
+  const snap=await get(ref(db,`friends/${myPublicId}/${id}`));
+  return snap.exists();
+}
 async function openProfileView(id){
   const us=await get(ref(db,"users/"+id));
   if(!us.exists()) return;
   const u=us.val();
+  const friend=await isFriend(id);
   $("profileAvatar").src=avatarFor(u);
   $("profileName").textContent=u.name||id;
   $("profileUsername").textContent=u.username?`@${u.username}`:"";
   $("profileIdRow").textContent=`ID ${id}`;
   $("profileRole").classList.toggle("hidden", (u.email||"").toLowerCase()!==SUPER_ADMIN_EMAIL);
+  const actions=$("profileActions"); actions.innerHTML="";
+  const write=document.createElement("button"); write.className="primaryAction actionBtn"; write.innerHTML=icon("chat")+"Написать";
+  write.onclick=()=>{ $("profileModal").classList.add("hidden"); openChat(id,u); };
+  actions.appendChild(write);
+  const friendBtn=document.createElement("button");
+  friendBtn.className=friend?"secondaryBtn actionBtn dangerSoft":"secondaryBtn actionBtn";
+  friendBtn.innerHTML=friend?icon("personRemove")+"Удалить из друзей":icon("personAdd")+"Добавить в друзья";
+  friendBtn.onclick=async()=>{
+    if(friend){ await remove(ref(db,`friends/${myPublicId}/${id}`)); }
+    else { await saveFriend(id,u); }
+    openProfileView(id);
+  };
+  actions.appendChild(friendBtn);
   $("profileModal").classList.remove("hidden");
 }
 $("closeProfile").onclick=()=>$("profileModal").classList.add("hidden");
@@ -462,7 +511,7 @@ async function findUser(){
     if(seen.has(id)) return; seen.add(id);
     const d=document.createElement("div");
     d.className="result";
-    d.innerHTML=`<img class="avatar" src="${avatarFor(u)}" alt=""><span class="resultInfo"><b>${esc(u.name)}</b><small>${u.username?`@${esc(u.username)} · `:""}ID ${id}</small></span><button>${icon("plus")}Друг</button>`;
+    d.innerHTML=`<img class="avatar" src="${avatarFor(u)}" alt=""><span class="resultInfo"><b>${esc(u.name)}</b><small>${u.username?`@${esc(u.username)} · `:""}ID ${id}</small></span><button>${icon("personAdd")}Друг</button>`;
     d.querySelector("button").onclick=async()=>{ await saveFriend(id,u); openChat(id,u); };
     $("searchResult").appendChild(d);
   });
