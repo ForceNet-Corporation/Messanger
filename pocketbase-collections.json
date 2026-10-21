@@ -1,0 +1,72 @@
+{
+  "note": "Create these collections in PocketBase Admin UI; this file documents the required schema and rules.",
+  "collections": [
+    {
+      "name": "users",
+      "type": "auth",
+      "fields": [
+        {
+          "name": "name",
+          "type": "text",
+          "required": false
+        }
+      ],
+      "rules": {
+        "listRule": null,
+        "viewRule": "id = @request.auth.id",
+        "createRule": "",
+        "updateRule": "id = @request.auth.id",
+        "deleteRule": "id = @request.auth.id"
+      }
+    },
+    {
+      "name": "app_data",
+      "type": "base",
+      "fields": [
+        {
+          "name": "path",
+          "type": "text",
+          "required": true,
+          "unique": true
+        },
+        {
+          "name": "value",
+          "type": "text",
+          "required": true
+        }
+      ],
+      "rules": {
+        "listRule": "@request.auth.id != \"\"",
+        "viewRule": "@request.auth.id != \"\"",
+        "createRule": "@request.auth.id != \"\"",
+        "updateRule": "@request.auth.id != \"\"",
+        "deleteRule": "@request.auth.id != \"\""
+      }
+    },
+    {
+      "name": "uploads",
+      "type": "base",
+      "fields": [
+        {
+          "name": "path",
+          "type": "text",
+          "required": true
+        },
+        {
+          "name": "file",
+          "type": "file",
+          "required": true,
+          "maxSelect": 1
+        }
+      ],
+      "rules": {
+        "listRule": "@request.auth.id != \"\"",
+        "viewRule": "",
+        "createRule": "@request.auth.id != \"\"",
+        "updateRule": "@request.auth.id != \"\"",
+        "deleteRule": "@request.auth.id != \"\""
+      },
+      "notes": "Files are publicly retrievable by URL. Do not store sensitive/private files."
+    }
+  ]
+}
