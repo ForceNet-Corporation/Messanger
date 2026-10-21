@@ -51,3 +51,16 @@ button.secondary:hover{background:#1d2531;border-color:#303b4b}
 .spinner{width:34px;height:34px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--accent);animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 @media(max-width:480px){body{padding:0;align-items:stretch}.card{width:100%;min-height:100dvh;border:0;border-radius:0;box-shadow:none;display:flex;flex-direction:column;justify-content:center;padding:24px}}
+
+/* Matching Sphere cosmic authentication look */
+:root{--sphere-glow:rgba(79,91,255,.34)}
+body{background-color:#05091d;background-image:radial-gradient(ellipse at 50% 100%,rgba(30,72,255,.42),transparent 48%),radial-gradient(ellipse at 8% 8%,rgba(104,43,255,.28),transparent 35%),radial-gradient(ellipse at 95% 18%,rgba(0,94,255,.2),transparent 36%);background-attachment:fixed}
+.card{border:1px solid rgba(132,145,255,.34)!important;background:linear-gradient(145deg,rgba(20,27,73,.92),rgba(7,12,36,.96))!important;box-shadow:0 24px 80px rgba(0,0,0,.42),0 0 44px rgba(68,75,255,.12)!important;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-radius:24px!important}
+.logo{background:transparent!important;box-shadow:none!important}
+.logo img{filter:drop-shadow(0 0 15px rgba(92,95,255,.5))}
+.card h1{letter-spacing:-.045em}
+.card input{background:rgba(15,24,65,.78)!important;border:1px solid rgba(132,145,255,.24)!important;color:#f5f6ff!important;border-radius:14px!important;min-width:0;max-width:100%}
+.card input::placeholder{color:#9ca9df!important}
+.card button{border-radius:14px!important;background:linear-gradient(105deg,#a54bff,#6358ff 52%,#245cff)!important;box-shadow:0 8px 24px rgba(76,75,255,.22);color:white!important}
+.card button.secondary{background:rgba(21,31,77,.82)!important;border:1px solid rgba(132,145,255,.24)!important}
+@media(max-width:560px){body{padding:14px!important;align-items:center}.card{width:100%!important;max-width:430px!important;padding:24px 18px!important;border-radius:20px!important}.card h1{font-size:36px!important}.card input,.card button{min-height:48px!important}}
