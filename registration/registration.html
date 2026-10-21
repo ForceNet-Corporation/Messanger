@@ -22,11 +22,8 @@
   <p id="status" class="status"></p>
 </main>
 <script type="module">
-import {initializeApp} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-import {getAuth,setPersistence,browserLocalPersistence,createUserWithEmailAndPassword,signInWithEmailAndPassword,updateProfile,deleteUser,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
-import {getDatabase,ref,set,get,remove,query,orderByChild,equalTo,runTransaction} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
-const firebaseConfig={apiKey:"AIzaSyCiL-Eq-xQNRR8d-bReut-gahzy2BGTWds",authDomain:"forcenet-cefc2.firebaseapp.com",databaseURL:"https://forcenet-cefc2-default-rtdb.europe-west1.firebasedatabase.app/",projectId:"forcenet-cefc2",storageBucket:"forcenet-cefc2.firebasestorage.app",messagingSenderId:"1021268753513",appId:"1:1021268753513:web:f7af3b4e0e4ff40c48f6f8"};
-const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getDatabase(app); await setPersistence(auth,browserLocalPersistence);
+import {auth,createUserWithEmailAndPassword,signInWithEmailAndPassword,updateProfile,deleteUser,onAuthStateChanged,getDatabase,ref,set,get,remove,query,orderByChild,equalTo,runTransaction} from "../pocketbase-compat.js";
+const db=getDatabase();
 const $=id=>document.getElementById(id), msg=t=>{$("status").textContent=t};
 let busy=false;
 
@@ -58,7 +55,7 @@ onAuthStateChanged(auth,async user=>{
   if(p) location.replace("../main/main.html");
   else setResuming(false);
 });
-// Пока Firebase восстанавливает сохранённую сессию (через локальное хранилище),
+// Пока PocketBase восстанавливает сохранённую сессию (через локальное хранилище),
 // прячем форму входа, чтобы не было "мигания" перед автоматическим входом.
 if(localStorage.getItem("forceNetPublicId")){
   setResuming(true);
@@ -74,7 +71,7 @@ $("registerForm").onsubmit=async e=>{
  if(!validUsername(usernameLower)){busy=false;return msg("Юзернейм: 3–20 символов, латинские буквы, цифры и _.")}
  try{
    // Сначала создаём Auth-сессию. Раньше /usernames резервировался ДО авторизации,
-   // из-за чего Firebase RTDB с правилами "только authenticated" возвращал permission_denied.
+   // из-за чего база с правилами доступа возвращала ошибку.
    msg("Создаём аккаунт…");
    const cred=await createUserWithEmailAndPassword(auth,email,password);
    let usernameClaimed=false;
@@ -94,7 +91,7 @@ $("registerForm").onsubmit=async e=>{
      await deleteUser(cred.user).catch(()=>{});
      throw innerErr;
    }
- }catch(err){console.error(err);msg(err.code==="auth/email-already-in-use"?"Эта почта уже зарегистрирована.":err.code==="username-already-taken"?"Этот юзернейм уже занят.":err.code==="PERMISSION_DENIED"||err.code==="permission-denied"?"Нет доступа к базе данных. Проверьте правила Firebase Realtime Database.":(err.message||"Ошибка регистрации."));busy=false}
+ }catch(err){console.error(err);msg(err.code==="auth/email-already-in-use"?"Эта почта уже зарегистрирована.":err.code==="username-already-taken"?"Этот юзернейм уже занят.":err.code==="PERMISSION_DENIED"||err.code==="permission-denied"?"Нет доступа к PocketBase. Проверьте коллекции app_data и uploads, а также правила доступа.":(err.message||"Ошибка регистрации."));busy=false}
 };
 
 $("loginForm").onsubmit=async e=>{
